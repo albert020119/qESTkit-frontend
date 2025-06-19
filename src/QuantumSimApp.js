@@ -4,7 +4,7 @@ import ThemeToggle from "./ThemeToggle";
 import { useTheme } from "./theme/ThemeContext";
 
 export default function QuantumSimApp() {
-  const { darkMode } = useTheme(); // ✅ Use the context
+  const { darkMode } = useTheme(); 
   const [code, setCode] = useState("// Example: H 0\nH 0\nCNOT 0 1\n");
   const [results, setResults] = useState(null);
   const [isNoisy, setIsNoisy] = useState(false);
