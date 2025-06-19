@@ -146,6 +146,26 @@ export default function QuantumSimApp() {
 
   return (
     <div className="container">
+
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
+  <a
+    href="/documentation.html"
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{
+      backgroundColor: "#3b82f6",
+      color: "white",
+      padding: "8px 16px",
+      borderRadius: "6px",
+      textDecoration: "none",
+      fontWeight: "bold"
+    }}
+  >
+    Documentation
+  </a>
+</div>
+
+
       <h1>Quantum Circuit Simulator</h1>
 
       <div className="panel">
