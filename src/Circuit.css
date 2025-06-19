@@ -20,6 +20,19 @@ body {
   color: var(--fg);
 }
 
+.layout {
+  display: flex;
+  gap: 24px;
+}
+
+.toolbox-container {
+  flex: 0 0 250px;
+}
+
+.main-content {
+  flex: 1;
+}
+
 .panel {
   background-color: var(--panel);
   border-radius: 12px;
