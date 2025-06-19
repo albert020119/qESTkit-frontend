@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="documentation.css" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --fg: #f1f5f9;
+      --panel: #1e293b;
+      --accent: #3b82f6;
+    }
+
+    body {
+      margin: 0;
+      background-color: var(--panel);
+      color: var(--fg);
+      font-family: system-ui, sans-serif;
+      height: 100vh;
+    }
+
+    .sidebar {
+      background-color: var(--panel);
+      color: var(--fg);
+      padding: 24px;
+      width: 220px;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+
+    .sidebar h2 {
+      font-size: 18px;
+      margin-bottom: 16px;
+    }
+
+    .sidebar a {
+      display: block;
+      color: var(--fg);
+      text-decoration: none;
+      margin: 8px 0;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    .sidebar a:hover {
+      color: var(--accent);
+    }
+
+    .sidebar > div > a:first-child {
+      font-weight: bold;
+      font-size: 16px;
+      margin-top: 16px;
+    }
+
+    .sidebar > a {
+      font-weight: bold;
+      font-size: 16px;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>Docs</h2>
+
+    <div>
+      <a href="documentation.html">Help</a>
+      <div style="margin-left: 12px; margin-top: 4px;">
+        <a href="#">• How to simulate circuit</a>
+        <a href="#">• Noisy Mode</a>
+      </div>
+    </div>
+
+    <div>
+      <a href="#">Theoretical Documentation</a>
+      <div style="margin-left: 12px; margin-top: 4px;">
+        <a href="qubit.html">• What is a Qubit?</a>
+        <a href="quantum-gates.html">• Quantum Gates</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "./Circuit.css";
+
+// Imports from both branches, deduped and ordered
+import ThemeToggle from "./ThemeToggle";
+import { useTheme } from "./theme/ThemeContext";
 import BlochSphere from "./BlochSphere";
 import GateToolbox from "./components/GateToolbox/GateToolbox";
 import CircuitBoard from "./components/Circuit/CircuitBoard";
@@ -7,11 +11,9 @@ import "./components/Circuit/CircuitBoard.css";
 import "./components/Circuit/CircuitBoardExtras.css";
 import "./components/GateToolbox/GateToolbox.css";
 import { useDragDrop } from "./hooks/useDragDrop";
-import ThemeToggle from "./ThemeToggle";
-import { useTheme } from "./theme/ThemeContext";
 import Chatbot from "./chatbot/Chatbot";
 
-// ========= Helper functions from bloch-sphere branch =========
+// ========= Helper functions =========
 function getBlochAnglesFromResults(results, qubitIdx = 0) {
   if (!results) return { theta: Math.PI / 4, phi: 0 };
   let shots0 = 0, shots1 = 0, total = 0;
@@ -81,14 +83,16 @@ function getQSphereVectors(results, numQubits) {
 
 // ========== Main Component ==========
 export default function QuantumSimApp() {
+  // Theme context
+  const { darkMode } = useTheme();
+
   // State
   const [code, setCode] = useState("H 0\nCNOT 0 1\n");
   const [results, setResults] = useState(null);
   const [isNoisy, setIsNoisy] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const [selectedQubit, setSelectedQubit] = useState(0);
 
-  // D&D/circuit state:
+  // DnD/circuit state:
   const [numQubits, setNumQubits] = useState(2);
   const [circuit, setCircuit] = useState([]);
   const [gatePrompt, setGatePrompt] = useState(null);
@@ -139,7 +143,7 @@ export default function QuantumSimApp() {
     return generatedCode;
   };
 
-  // ======= Drag-and-drop logic (from master) =======
+  // ======= Drag-and-drop logic =======
   useEffect(() => {
     const parsedGates = parseCodeToGates(code);
     const processedGates = parsedGates.map((gate, index) => ({
@@ -356,9 +360,6 @@ export default function QuantumSimApp() {
                 {isNoisy ? "Noisy Mode: ON" : "Noisy Mode: OFF"}
               </button>
               <ThemeToggle />
-              <button onClick={() => setDarkMode(!darkMode)}>
-                Toggle Dark Mode
-              </button>
             </div>
           </div>
 
@@ -425,7 +426,7 @@ export default function QuantumSimApp() {
               </div>
             )}
           </div>
-          
+
           {/* Chatbot added at the end of the main content */}
           <Chatbot circuitText={code} />
         </div>
