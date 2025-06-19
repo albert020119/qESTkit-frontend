@@ -18,31 +18,46 @@
   height: 60px;
   background: var(--gate-bg);
   color: white;
-  font-family: monospace;
-  font-size: 14px;
-  border-radius: 8px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: grab;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all 0.2s ease-in-out;
   position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  letter-spacing: 0.5px;
 }
 
 .gate-with-param {
-  background: linear-gradient(to bottom right, #6366f1, #4f46e5);
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .param-indicator {
-  font-size: 10px;
+  font-size: 11px;
   margin-top: 4px;
-  opacity: 0.8;
+  font-weight: normal;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 1px 6px;
+  letter-spacing: 0;
 }
 
 .gate-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.gate-item:active {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 4px rgba(0, 0, 0, 0.2);
 }
 
 .toolbox-instructions {
@@ -158,4 +173,73 @@
 
 .dark .close-button:hover {
   background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Gate type specific styling */
+.gate-single-qubit {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.gate-multi-qubit {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.gate-measurement {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+/* Improved gate list layout */
+.gate-category {
+  margin-bottom: 16px;
+}
+
+.gate-category-title {
+  font-size: 14px;
+  color: var(--fg);
+  margin-bottom: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  padding: 5px 8px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  border-left: 4px solid #3b82f6;
+}
+
+/* Use different colors for different gate categories */
+.gate-category:nth-child(2) .gate-category-title {
+  border-left-color: #8b5cf6; /* Purple for phase gates */
+}
+
+.gate-category:nth-child(3) .gate-category-title {
+  border-left-color: #10b981; /* Green for rotation gates */
+}
+
+.gate-category:nth-child(4) .gate-category-title {
+  border-left-color: #f59e0b; /* Amber for multi-qubit gates */
+}
+
+/* Tooltips for gates */
+.gate-item .gate-tooltip {
+  visibility: hidden;
+  width: 120px;
+  background-color: rgba(15, 23, 42, 0.9);
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 10;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -60px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.gate-item:hover .gate-tooltip {
+  visibility: visible;
+  opacity: 1;
 }

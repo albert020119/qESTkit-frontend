@@ -14,15 +14,28 @@ const getVectorColor = (index) => {
 const GateItem = ({ gate, onDragStart }) => {
   // For gates with parameters, display differently
   const hasParam = gate.hasParam;
+  const isMultiQubit = gate.controlQubits || gate.targetQubits;
+  
+  // Determine CSS class based on gate type
+  let gateTypeClass = '';
+  if (isMultiQubit) {
+    gateTypeClass = 'gate-multi-qubit';
+  } else if (gate.name === 'M') {
+    gateTypeClass = 'gate-measurement';
+  } else {
+    gateTypeClass = 'gate-single-qubit';
+  }
   
   return (
     <div 
-      className={`gate-item ${hasParam ? 'gate-with-param' : ''}`}
+      className={`gate-item ${hasParam ? 'gate-with-param' : ''} ${gateTypeClass}`}
       draggable
       onDragStart={() => onDragStart(gate)}
+      title={gate.description}
     >
       {gate.name}
       {hasParam && <div className="param-indicator">(θ)</div>}
+      <span className="gate-tooltip">{gate.description}</span>
     </div>
   );
 };
@@ -30,40 +43,66 @@ const GateItem = ({ gate, onDragStart }) => {
 const GateToolbox = ({ onGateDragStart, qSphereVectors = [] }) => {
   const [isBlochExpanded, setIsBlochExpanded] = useState(false);
   const [activeCircuitView, setActiveCircuitView] = useState('bloch');
-  
-  // Define available quantum gates based on backend capabilities
-  const gates = [
-    { name: 'H', description: 'Hadamard Gate' },
-    { name: 'X', description: 'Pauli-X Gate (NOT)' },
-    { name: 'Y', description: 'Pauli-Y Gate' },
-    { name: 'Z', description: 'Pauli-Z Gate' },
-    { name: 'S', description: 'Phase Gate (π/2)' },
-    { name: 'T', description: 'T Gate (π/4)' },
-    { name: 'CNOT', description: 'Controlled NOT Gate', controlQubits: 1, targetQubits: 1 },
-    { name: 'CZ', description: 'Controlled Z Gate', controlQubits: 1, targetQubits: 1 },
-    { name: 'Identity', description: 'Identity Gate (I)' },
-    { name: 'Ph', description: 'Phase Gate', hasParam: true, paramName: 'angle' },
-    { name: 'Rx', description: 'X-Rotation', hasParam: true, paramName: 'angle' },
-    { name: 'Ry', description: 'Y-Rotation', hasParam: true, paramName: 'angle' },
-    { name: 'Rz', description: 'Z-Rotation', hasParam: true, paramName: 'angle' },
+    // Define available quantum gates based on backend capabilities, categorized
+  const gateCategories = [
+    {
+      name: "Basic Gates",
+      gates: [
+        { name: 'H', description: 'Hadamard Gate' },
+        { name: 'X', description: 'Pauli-X Gate (NOT)' },
+        { name: 'Y', description: 'Pauli-Y Gate' },
+        { name: 'Z', description: 'Pauli-Z Gate' },
+        { name: 'I', description: 'Identity Gate' },
+      ]
+    },
+    {
+      name: "Phase Gates",
+      gates: [
+        { name: 'S', description: 'Phase Gate (π/2)' },
+        { name: 'T', description: 'T Gate (π/4)' },
+        { name: 'Ph', description: 'Phase Gate', hasParam: true, paramName: 'angle' },
+      ]
+    },
+    {
+      name: "Rotation Gates",
+      gates: [
+        { name: 'Rx', description: 'X-Rotation', hasParam: true, paramName: 'angle' },
+        { name: 'Ry', description: 'Y-Rotation', hasParam: true, paramName: 'angle' },
+        { name: 'Rz', description: 'Z-Rotation', hasParam: true, paramName: 'angle' },
+      ]
+    },
+    {
+      name: "Multi-Qubit Gates",
+      gates: [
+        { name: 'CNOT', description: 'Controlled NOT Gate', controlQubits: 1, targetQubits: 1 },
+        { name: 'CZ', description: 'Controlled Z Gate', controlQubits: 1, targetQubits: 1 }
+      ]
+    }
   ];
+  
+  // Flatten gates for backwards compatibility
+  const gates = gateCategories.flatMap(category => category.gates);
 
   const toggleBlochExpansion = () => {
     setIsBlochExpanded(!isBlochExpanded);
   };
-
   return (
     <div className="gate-toolbox">
       <h3>Quantum Gates</h3>
-      <div className="gate-list">
-        {gates.map((gate, index) => (
-          <GateItem 
-            key={index} 
-            gate={gate} 
-            onDragStart={onGateDragStart} 
-          />
-        ))}
-      </div>
+      {gateCategories.map((category, catIndex) => (
+        <div key={catIndex} className="gate-category">
+          <div className="gate-category-title">{category.name}</div>
+          <div className="gate-list">
+            {category.gates.map((gate, index) => (
+              <GateItem 
+                key={index} 
+                gate={gate} 
+                onDragStart={onGateDragStart} 
+              />
+            ))}
+          </div>
+        </div>
+      ))}
       <div className="toolbox-instructions">
         <p>Drag gates to the circuit</p>
       </div>

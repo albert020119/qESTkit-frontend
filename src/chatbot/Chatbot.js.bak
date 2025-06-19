@@ -1,0 +1,99 @@
+import React, { useState, useRef, useEffect } from "react";
+import "./Circuit.css";
+
+export default function Chatbot({ circuitText }) {
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState([
+    { from: "bot", text: "Hello! How can I help you with quantum circuits?" },
+  ]);
+  const [input, setInput] = useState("");
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (open && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [open]);
+
+  const handleAttachCode = () => {
+    if (circuitText) {
+      setInput(input + (input && !input.endsWith(" ") ? " " : "") + circuitText);
+      if (inputRef.current) inputRef.current.focus();
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+    const userMsg = input;
+    setMessages((msgs) => [...msgs, { from: "user", text: userMsg }]);
+    setInput("");
+    try {
+      const res = await fetch("http://localhost:8000/ask-gemini", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMsg }),
+      });
+      const data = await res.json();
+      const botText = data.answer || "No response.";
+      setMessages((msgs) => [...msgs, { from: "bot", text: botText }]);
+    } catch (err) {
+      setMessages((msgs) => [...msgs, { from: "bot", text: "Error: " + err.message }]);
+    }
+  };
+  return (
+    <div className="chatbot-container">
+      {!open && (
+        <button
+          className="chatbot-fab"
+          onClick={() => setOpen(true)}
+          title="Chat with Quantum Assistant"
+        >
+          <span role="img" aria-label="chat">
+            💬
+          </span>
+        </button>
+      )}
+      {open && (
+        <div className="chatbot-popup">
+          <div className="chatbot-header">
+            <span>Quantum Assistant</span>
+            <button
+              className="chatbot-close"
+              onClick={() => setOpen(false)}
+            >
+              ×
+            </button>
+          </div>          <div className="chatbot-messages">
+            {messages.map((msg, idx) => (
+              <div key={idx} className={`msg ${msg.from}`}>
+                {msg.text.split("\n").map((line, lineIdx) => (
+                  <div key={lineIdx} className="message-line">{line}</div>
+                ))}
+              </div>
+            ))}
+          </div>
+          <div className="chatbot-input">
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type your message..."
+              rows={1}
+              className="chatbot-textarea"
+            />            <button
+              className="attach-code-btn"
+              onClick={handleAttachCode}
+              title="Attach circuit code"
+            >
+              <span className="plus-sign">+</span>
+            </button>
+            <button
+              className="send-btn"
+              onClick={sendMessage}
+            >Send</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

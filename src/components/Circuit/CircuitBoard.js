@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './CircuitBoard.css';
 
 const CircuitBoard = ({ 
@@ -13,7 +13,11 @@ const CircuitBoard = ({
   gatePrompt,
   removeModeActive,
   darkMode 
-}) => {  // Generate a 2D grid representing the circuit
+}) => {
+  // State for tracking which cell is being dragged over
+  const [dragOverCell, setDragOverCell] = useState(null);
+  
+  // Generate a 2D grid representing the circuit
   const generateCircuitGrid = () => {
     const grid = [];
     const columns = 10; // Maximum columns for gates
@@ -66,31 +70,26 @@ const CircuitBoard = ({
   };
   
   const grid = generateCircuitGrid();
-  const renderGate = (cell) => {
-    if (cell.isEmpty) return null;
+  const renderGate = (cell) => {    if (cell.isEmpty) return null;
     
-    // Handle wire cells between control and target
+    // Handle wire cells between control and target    
     if (cell.isWire) {
-      return (
-        <div className="gate-cell gate-wire"></div>
-      );
+      // Wire cells should be completely transparent to avoid any visual elements
+      return null;
     }
     
-    if ((cell.name === 'CNOT' || cell.name === 'SWAP') && cell.qubits.length === 2) {
+    if ((cell.name === 'CNOT' || cell.name === 'SWAP' || cell.name === 'CZ') && cell.qubits.length === 2) {
       const [control, target] = cell.qubits;
-      
-      if (cell.qubit === control) {
+        if (cell.qubit === control) {
         return (
           <div className={`gate-cell ${cell.name.toLowerCase()}-control`}>
-            {cell.name === 'CNOT' ? '●' : '×'}
-            <div className="connection-indicator" data-role="control" />
+            {cell.name === 'CNOT' ? '●' : cell.name === 'CZ' ? '●' : '×'}
           </div>
         );
       } else if (cell.qubit === target) {
         return (
           <div className={`gate-cell ${cell.name.toLowerCase()}-target`}>
-            {cell.name === 'CNOT' ? '⊕' : '×'}
-            <div className="connection-indicator" data-role="target" />
+            {cell.name === 'CNOT' ? '⊕' : cell.name === 'CZ' ? 'Z' : '×'}
           </div>
         );
       }
@@ -114,26 +113,22 @@ const CircuitBoard = ({
           Math.max(controlQubit, targetQubit)
         ];
         const distance = bottomQubit - topQubit;
-        
-        if (distance <= 1) return null; // Adjacent qubits don't need extra line
-        
-        // Create a vertical connection line
+          // Create a single clean vertical connection line that perfectly centers on both gates
         return (
           <div 
             key={`connection-${idx}`}
             className="gate-connection"
             style={{
-              left: `${60 * gate.column + 30}px`,
-              top: `${60 * topQubit + 30}px`,
-              height: `${60 * distance}px`,
-              width: '2px'
+              left: `${60 * gate.column + 30}px`, // Center of the cell
+              top: `${60 * topQubit + 30}px`, // Center of top gate
+              height: `${60 * distance}px`, // Distance between gates
+              width: '3px' // Connection line width
             }}
           />
         );
       });
   };
-  
-  // Determine the cell class based on state
+    // Determine the cell class based on state
   const getCellClass = (cell, rowIdx, colIdx) => {
     let classes = `circuit-cell ${cell.isEmpty ? 'empty' : ''}`;
     
@@ -150,6 +145,11 @@ const CircuitBoard = ({
     // If we're selecting target qubit, add the target-select class to cells that are not the control
     if (gatePrompt && gatePrompt.step === 'select-target' && rowIdx !== gatePrompt.controlQubit) {
       classes += ' target-select';
+    }
+    
+    // Add drag-over class for visual feedback
+    if (dragOverCell && dragOverCell.qubit === rowIdx && dragOverCell.column === colIdx && cell.isEmpty) {
+      classes += ' drag-over';
     }
     
     return classes;
@@ -204,12 +204,18 @@ const CircuitBoard = ({
           
           {grid.map((row, rowIndex) => (
             <div key={`row-${rowIndex}`} className="circuit-row">
-              {row.map((cell, colIndex) => (
-                <div
+              {row.map((cell, colIndex) => (                <div
                   key={`cell-${rowIndex}-${colIndex}`}
                   className={getCellClass(cell, rowIndex, colIndex)}
-                  onDragOver={onDragOver}
-                  onDrop={(e) => onDrop(e, { qubit: rowIndex, column: colIndex })}
+                  onDragOver={(e) => {
+                    onDragOver(e);
+                    setDragOverCell({ qubit: rowIndex, column: colIndex });
+                  }}
+                  onDragLeave={() => setDragOverCell(null)}
+                  onDrop={(e) => {
+                    setDragOverCell(null);
+                    onDrop(e, { qubit: rowIndex, column: colIndex });
+                  }}
                   onClick={() => onCellClick({ qubit: rowIndex, column: colIndex })}
                 >
                   {renderGate(cell)}
