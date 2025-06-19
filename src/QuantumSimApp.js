@@ -6,6 +6,8 @@ import "./components/Circuit/CircuitBoard.css";
 import "./components/Circuit/CircuitBoardExtras.css";
 import "./components/GateToolbox/GateToolbox.css";
 import { useDragDrop } from "./hooks/useDragDrop";
+import ThemeToggle from "./ThemeToggle";
+import { useTheme } from "./theme/ThemeContext";
 
 export default function QuantumSimApp() {
   const [code, setCode] = useState("H 0\nCNOT 0 1\n");
@@ -23,6 +25,8 @@ export default function QuantumSimApp() {
   const [removeModeActive, setRemoveModeActive] = useState(false);  const parseCodeToGates = (rawCode) => {
     if (!rawCode || typeof rawCode !== 'string') return [];
     
+
+
     const lines = rawCode.split("\n");
     const gates = [];
     
@@ -294,7 +298,6 @@ const handleSimulate = async () => {
     const filtered = allQubits.filter((q) => Number.isInteger(q) && q >= 0);
     const numQubits = filtered.length ? Math.max(...filtered) + 1 : 1;
 
-    // Build timeline: alternate gate and line columns
     const timeline = [];
 
     gates.forEach((gate, i) => {
@@ -304,7 +307,6 @@ const handleSimulate = async () => {
       });
       timeline.push(gateCol);
 
-      // Add connector column (line) after each gate column except the last
       if (i < gates.length - 1) {
         const lineCol = Array(numQubits).fill(null);
         for (let q = 0; q < numQubits; q++) {
@@ -319,7 +321,7 @@ const handleSimulate = async () => {
     });
 
     return (
-      <div className={`circuit ${darkMode ? "dark" : ""}`}>
+      <div className="circuit">
         {Array.from({ length: numQubits }).map((_, qIdx) => (
           <div className="circuit-row" key={`qrow-${qIdx}`}>
             <span className="qubit-label">q[{qIdx}]</span>
@@ -377,99 +379,101 @@ const handleSimulate = async () => {
       </div>
     );
   };
-  return (
-    <div className={`container ${darkMode ? "dark" : ""}`}>
-      <h1>Quantum Circuit Simulator</h1>
+ return (
+  <div className="container">
+    <h1>Quantum Circuit Simulator</h1>
+    
+    <div className="layout">
+      <div className="toolbox-container">
+        <GateToolbox onGateDragStart={handleDragStart} />
+      </div>
       
-      <div className="layout">
-        <div className="toolbox-container">
-          <GateToolbox onGateDragStart={handleDragStart} />
+      <div className="main-content">
+        <div className="panel">
+          <h2>Drag & Drop Circuit Editor</h2>
+          <CircuitBoard 
+            circuit={circuit}
+            numQubits={numQubits}
+            onAddQubit={handleAddQubit}
+            onRemoveQubit={handleRemoveQubit}
+            onDragOver={handleDragOver}
+            onDrop={onDrop}
+            onCellClick={(params) => {
+              if (params.cancel) {
+                setGatePrompt(null);
+                return;
+              }
+              
+              if (params.toggleRemove) {
+                toggleRemoveMode();
+                return;
+              }
+              
+              handleCellClick(params);
+            }}
+            gatePrompt={gatePrompt}
+            removeModeActive={removeModeActive}
+            darkMode={darkMode}
+          />
+          <div className="buttons">
+            <button onClick={handleSimulate}>Simulate Circuit</button>
+            <button
+              onClick={() => setIsNoisy(!isNoisy)}
+              className={isNoisy ? "noisy" : ""}
+            >
+              {isNoisy ? "Noisy Mode: ON" : "Noisy Mode: OFF"}
+            </button>
+            <ThemeToggle />
+          </div>
         </div>
         
-        <div className="main-content">
-          <div className="panel">
-            <h2>Drag & Drop Circuit Editor</h2>            <CircuitBoard 
-              circuit={circuit}
-              numQubits={numQubits}
-              onAddQubit={handleAddQubit}
-              onRemoveQubit={handleRemoveQubit}
-              onDragOver={handleDragOver}
-              onDrop={onDrop}
-              onCellClick={(params) => {
-                if (params.cancel) {
-                  setGatePrompt(null);
-                  return;
-                }
-                
-                if (params.toggleRemove) {
-                  toggleRemoveMode();
-                  return;
-                }
-                
-                handleCellClick(params);
-              }}
-              gatePrompt={gatePrompt}
-              removeModeActive={removeModeActive}
-              darkMode={darkMode}
-            />
-            <div className="buttons">
-              <button onClick={handleSimulate}>Simulate Circuit</button>
-              <button
-                onClick={() => setIsNoisy(!isNoisy)}
-                className={isNoisy ? "noisy" : ""}
-              >
-                {isNoisy ? "Noisy Mode: ON" : "Noisy Mode: OFF"}
-              </button>
-              <button onClick={() => setDarkMode(!darkMode)}>Toggle Dark Mode</button>
-            </div>
-          </div>
-          
-          <div className="panel">
-            <h2>Quantum Circuit Code</h2>            <textarea
-              rows={6}
-              value={code}              onChange={(e) => {
-                const newCode = e.target.value;
-                
-                // First set the manual edit flag
-                setIsManualEdit(true);
-                
-                // Then update the code
-                setCode(newCode);
-                
-                // Only try to parse valid gate instructions
-                if (newCode.trim()) {
-                  // Process code changes to update the circuit
-                  try {
-                    const parsedGates = parseCodeToGates(newCode);
-                    if (parsedGates.length > 0) {
-                      const processedGates = parsedGates.map((gate, index) => ({
-                        ...gate,
-                        column: index
-                      }));
-                      setCircuit(processedGates);
-                    }
-                  } catch (err) {
-                    // Just ignore parsing errors for incomplete inputs
-                    console.log("Parsing in progress...");
+        <div className="panel">
+          <h2>Quantum Circuit Code</h2>
+          <textarea
+            rows={6}
+            value={code}
+            onChange={(e) => {
+              const newCode = e.target.value;
+              
+              // First set the manual edit flag
+              setIsManualEdit(true);
+              
+              // Then update the code
+              setCode(newCode);
+              
+              // Only try to parse valid gate instructions
+              if (newCode.trim()) {
+                // Process code changes to update the circuit
+                try {
+                  const parsedGates = parseCodeToGates(newCode);
+                  if (parsedGates.length > 0) {
+                    const processedGates = parsedGates.map((gate, index) => ({
+                      ...gate,
+                      column: index
+                    }));
+                    setCircuit(processedGates);
                   }
+                } catch (err) {
+                  // Just ignore parsing errors for incomplete inputs
+                  console.log("Parsing in progress...");
                 }
-              }}
-            />
-            <small>You can also directly edit the code above</small>
-          </div>
-
-          {results && (
-            <div className="panel">
-              <h3>Simulation Results</h3>
-              {Object.entries(results).map(([state, count]) => (
-                <div key={state}>
-                  {state}: {count}
-                </div>
-              ))}
-            </div>
-          )}
+              }
+            }}
+          />
+          <small>You can also directly edit the code above</small>
         </div>
+
+        {results && (
+          <div className="panel">
+            <h3>Simulation Results</h3>
+            {Object.entries(results).map(([state, count]) => (
+              <div key={state}>
+                {state}: {count}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
-  );
-}
+  </div>
+);
