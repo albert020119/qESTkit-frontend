@@ -22,16 +22,23 @@ export default function Chatbot({ circuitText }) {
     }
   };
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!input.trim()) return;
-    setMessages([...messages, { from: "user", text: input }]);
-    setTimeout(() => {
-      setMessages((msgs) => [
-        ...msgs,
-        { from: "bot", text: "I'm just a demo bot. Ask me anything!" },
-      ]);
-    }, 500);
+    const userMsg = input;
+    setMessages((msgs) => [...msgs, { from: "user", text: userMsg }]);
     setInput("");
+    try {
+      const res = await fetch("http://localhost:8000/ask-gemini", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMsg }),
+      });
+      const data = await res.json();
+      const botText = data.answer || "No response.";
+      setMessages((msgs) => [...msgs, { from: "bot", text: botText }]);
+    } catch (err) {
+      setMessages((msgs) => [...msgs, { from: "bot", text: "Error: " + err.message }]);
+    }
   };
 
   return (
