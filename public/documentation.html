@@ -11,15 +11,16 @@
       <h2>Docs</h2>
 
       <div>
-        <a href="#" onclick="showSection('help')">Help</a>
+        <a href="#" onclick="showSection('helpIntro')">Help</a>
         <div class="indent">
           <a href="#" onclick="showSection('simulate')">• How to simulate circuit</a>
+          <a href="#" onclick="showSection('syntax')">• Gate Syntax</a>
           <a href="#" onclick="showSection('noisy')">• Noisy Mode</a>
         </div>
       </div>
 
       <div>
-        <a href="#" onclick="showSection('theory')">Theoretical Documentation</a>
+        <a href="#" onclick="showSection('theoryIntro')">Theoretical Documentation</a>
         <div class="indent">
           <a href="#" onclick="showSection('qubit')">• What is a Qubit?</a>
           <a href="#" onclick="showSection('gates')">• Quantum Gates</a>
@@ -34,15 +35,150 @@
         <p>Select a section from the sidebar.</p>
       </div>
 
-      <div id="simulate" class="section" style="display:none">
-        <h1>How to simulate circuit</h1>
-        <p>Write your circuit code in the provided editor and press the simulate button to see the results.</p>
-      </div>
+      <div id="helpIntro" class="section" style="display:none">
+  <h1>Help Section</h1>
+  <p>Here you’ll find practical guidance on how to use the simulator : from how to write quantum circuits and gate syntax, to enabling noisy mode.</p>
+</div>
 
+<div id="theoryIntro" class="section" style="display:none">
+  <h1>Theoretical Documentation</h1>
+  <p>This section helps you learn the core principles of quantum computing : what a qubit is, how gates operate, and how key algorithms work.</p>
+</div>
+
+      <div id="simulate" class="section" style="display:none">
+  <h1>How to Simulate a Circuit</h1>
+
+  <p>
+    You can build and run a quantum circuit using <strong>two main methods</strong>:
+  </p>
+
+  <ul>
+    <li><strong>Code Editor</strong>: Directly type gate operations using a simple format like <code>H 0</code> or <code>CNOT 0 1</code>.</li>
+    <li><strong>Drag & Drop</strong>: Use the toolbox on the left to drag gates into the circuit grid.</li>
+  </ul>
+
+  <p>Below is a screenshot of the simulator in action:</p>
+
+  <img src="circuit_q.png" alt="Quantum Simulator Interface" style="width: 1000px; max-width: 100%; border-radius: 8px; margin: 16px 0;" />
+
+  <p>
+    In this example, we apply a <code>Hadamard (H)</code> gate to <code>q[0]</code>, placing it into superposition. 
+    Then we use a <code>CNOT</code> gate with <code>q[0]</code> as control and <code>q[1]</code> as target.
+  </p>
+
+  <p>
+    This circuit creates an <strong>entangled Bell state</strong>:  
+    <pre>(|00⟩ + |11⟩) / √2</pre>  
+    When measured, both qubits collapse to the same value — either both 0 or both 1 — with equal probability.
+  </p>
+
+  <p>
+    Once the circuit is built, click the <strong>Simulate Circuit</strong> button to run it and view the measurement results.
+  </p>
+</div>
+
+
+
+<div id="syntax" class="section" style="display:none">
+  <h1>Gate Syntax</h1>
+  <p>This simulator lets you program circuits using plain text. Each line corresponds to one gate instruction.</p>
+
+  <h2>Format</h2>
+  <p><code>GATE [angle] qubit(s)</code></p>
+  <ul>
+    <li>Single-qubit: <code>X 0</code>, <code>H 1</code></li>
+    <li>Two-qubit: <code>CNOT 0 1</code>, <code>CZ 1 0</code></li>
+    <li>Rotation/phase gates: <code>Rx 3.14 0</code>, <code>Rz 1.57 1</code></li>
+  </ul>
+
+  <h2>Examples</h2>
+  <pre>
+H 0
+CNOT 0 1
+X 0
+CZ 0 1
+Z 0
+S 0
+T 1
+Identity 1
+Ph 6 1
+Rx 6 1
+Ry 65 1
+Rz 56 0
+  </pre>
+
+  <p>
+    For gates that require an angle (like <code>Rx</code>, <code>Rz</code>, <code>Ph</code>), the angle is in radians and comes before the qubit index.
+  </p>
+</div>
+
+
+
+
+
+      
       <div id="noisy" class="section" style="display:none">
-        <h1>Noisy Mode</h1>
-        <p>Enabling Noisy Mode will simulate real-world imperfections using adjustable error rates.</p>
-      </div>
+  <h1>Noisy Mode</h1>
+
+  <p>
+    In the real world, quantum systems are subject to noise — unwanted interactions with their environment that cause errors.
+    Noisy Mode in this simulator helps you understand how noise affects quantum computations by simulating realistic imperfections.
+  </p>
+
+  <h2>What Kind of Noise Is Simulated?</h2>
+  <ul>
+    <li><strong>Gate errors</strong>: Applied gates may randomly behave incorrectly.</li>
+    <li><strong>Measurement errors</strong>: The measured output bit may flip with some probability.</li>
+  </ul>
+
+
+  <h2>Why Use Noisy Mode?</h2>
+  <ul>
+    <li>To simulate the behavior of real hardware like IBM Q or IonQ devices.</li>
+    <li>To study how quantum algorithms degrade under imperfections.</li>
+    <li>To prepare for quantum error correction or noise mitigation strategies.</li>
+  </ul>
+
+  <h2>When Should You Disable It?</h2>
+  <ul>
+    <li>When you want ideal, mathematically perfect results.</li>
+    <li>When debugging logic or learning basic quantum gates and circuits.</li>
+  </ul>
+
+  <h2>Summary</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Ideal Mode</th>
+        <th>Noisy Mode</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Realistic errors</td>
+        <td>❌</td>
+        <td>✅</td>
+      </tr>
+      <tr>
+        <td>Good for learning basics</td>
+        <td>✅</td>
+        <td>⚠️</td>
+      </tr>
+      <tr>
+        <td>Used in real devices</td>
+        <td>❌</td>
+        <td>✅</td>
+      </tr>
+      <tr>
+        <td>Supports error analysis</td>
+        <td>❌</td>
+        <td>✅</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
 
       <div id="qubit" class="section" style="display:none">
   <h1>What is a Qubit?</h1>
@@ -88,7 +224,7 @@
   <h1>Quantum Gates</h1>
   <p>
     Quantum gates are unitary operations that manipulate the state of one or more qubits.
-    They are reversible and correspond to matrices that rotate the qubit on the Bloch sphere.
+    They are reversible (except measurement) and correspond to matrices that rotate the qubit on the Bloch sphere.
   </p>
 
   <h2>Single-Qubit Gates</h2>
@@ -99,59 +235,67 @@
 H = (1/√2) [ [1,  1],
              [1, -1] ]
   </pre>
-  <p>
-    H|0⟩ = (|0⟩ + |1⟩)/√2  H|1⟩ = (|0⟩ - |1⟩)/√2
-  </p>
+  <p>Transforms |0⟩ to (|0⟩ + |1⟩)/√2 and |1⟩ to (|0⟩ - |1⟩)/√2</p>
 
   <h3>Pauli Gates</h3>
   <ul>
-    <li><strong>X gate</strong>: Bit flip (like classical NOT)</li>
+    <li><strong>X gate</strong> – Bit-flip gate (like classical NOT)</li>
     <pre>X = [ [0, 1], [1, 0] ]</pre>
 
-    <li><strong>Y gate</strong>: Bit and phase flip</li>
+    <li><strong>Y gate</strong> – Bit and phase flip</li>
     <pre>Y = [ [0, -i], [i, 0] ]</pre>
 
-    <li><strong>Z gate</strong>: Phase flip</li>
+    <li><strong>Z gate</strong> – Phase flip</li>
     <pre>Z = [ [1, 0], [0, -1] ]</pre>
   </ul>
 
+  <h3>Identity Gate (I)</h3>
+  <p>Leaves the qubit unchanged. Useful as a placeholder or timing alignment.</p>
+  <pre>I = [ [1, 0], [0, 1] ]</pre>
+
   <h3>Phase Gates</h3>
   <ul>
-    <li><strong>S gate</strong> (√Z): Adds a 90° phase to |1⟩</li>
-    <li><strong>T gate</strong> (4th root of Z): Adds a 45° phase</li>
+    <li><strong>S gate</strong> – Square root of Z. Adds a 90° phase to |1⟩.</li>
+    <pre>S = [ [1, 0], [0, i] ]</pre>
+
+    <li><strong>T gate</strong> – Fourth root of Z. Adds a 45° phase to |1⟩.</li>
+    <pre>T = [ [1, 0], [0, exp(iπ/4)] ]</pre>
+
+    <li><strong>Ph(θ)</strong> – Arbitrary phase gate. Adds θ radians to |1⟩.</li>
+    <pre>Ph(θ) = [ [1, 0], [0, e^{iθ}] ]</pre>
   </ul>
 
   <h3>Rotation Gates</h3>
-  <p>These rotate the qubit around a Bloch axis by angle θ:</p>
+  <p>These rotate the qubit around an axis on the Bloch sphere:</p>
   <ul>
-    <li>Rx(θ): around X-axis</li>
-    <li>Ry(θ): around Y-axis</li>
-    <li>Rz(θ): around Z-axis</li>
+    <li><strong>Rx(θ)</strong> – Rotates around the X-axis</li>
+    <li><strong>Ry(θ)</strong> – Rotates around the Y-axis</li>
+    <li><strong>Rz(θ)</strong> – Rotates around the Z-axis</li>
   </ul>
 
   <h2>Two-Qubit Gates</h2>
 
   <h3>CNOT (Controlled-NOT)</h3>
   <p>
-    Flips the target qubit if the control qubit is |1⟩. Used to create entanglement.
+    Flips the target qubit if the control qubit is in state |1⟩. Used to create entanglement.
+  </p>
+
+  <h3>CZ (Controlled-Z)</h3>
+  <p>
+    Applies a Z gate to the target qubit only if the control qubit is |1⟩. Adds a phase shift of -1 to the |11⟩ state.
   </p>
 
   <h3>SWAP</h3>
   <p>
-    Swaps the states of two qubits.
-  </p>
-
-  <h3>Controlled Gates</h3>
-  <p>
-    Many gates can be made conditional (e.g., Controlled-Z, Controlled-Rz).
+    Exchanges the states of two qubits: SWAP(|ab⟩) = |ba⟩.
   </p>
 
   <h2>Measurement (Not a gate)</h2>
   <p>
-    Collapses a qubit to |0⟩ or |1⟩ with probabilities based on its amplitude.
-    This is the only non-reversible operation in quantum computing.
+    Collapses a qubit to |0⟩ or |1⟩ based on its probability amplitudes. This is the only non-reversible operation in quantum computing.
   </p>
 </div>
+
 
 <div id="algorithms" class="section" style="display:none">
   <h1>Common Quantum Algorithms</h1>
