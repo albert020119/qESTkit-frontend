@@ -2,11 +2,10 @@ import React, { useState } from "react";
 import "./Circuit.css";
 
 export default function QuantumSimApp() {
-  const [code, setCode] = useState(
-    "// Write your quantum circuit\n// Example: H 0\n//          CNOT 0 1\n"
-  );
+  const [code, setCode] = useState("// Example: H 0\nH 0\nCNOT 0 1\n");
   const [results, setResults] = useState(null);
   const [isNoisy, setIsNoisy] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
 
   const parseCodeToGates = (rawCode) => {
     const lines = rawCode.split("\n");
@@ -14,16 +13,9 @@ export default function QuantumSimApp() {
     for (const line of lines) {
       const parts = line.trim().split(" ");
       if (parts.length < 2) continue;
-
       const name = parts[0].toUpperCase();
-      const qubits = parts
-        .slice(1)
-        .map(Number)
-        .filter((q) => Number.isInteger(q) && q >= 0);
-
-      if (qubits.length > 0) {
-        gates.push({ name, qubits });
-      }
+      const qubits = parts.slice(1).map(Number).filter((q) => Number.isInteger(q) && q >= 0);
+      if (qubits.length > 0) gates.push({ name, qubits });
     }
     return gates;
   };
@@ -33,16 +25,12 @@ export default function QuantumSimApp() {
     const allQubits = gates.flatMap((g) => g.qubits);
     const filtered = allQubits.filter((q) => Number.isInteger(q) && q >= 0);
     const numQubits = filtered.length ? Math.max(...filtered) + 1 : 1;
-
-    if (!gates.length) {
-      alert("No valid gates found. Please check your input.");
-      return;
-    }
+    if (!gates.length) return alert("No valid gates found.");
 
     const body = {
       num_qubits: numQubits,
       gates,
-      num_simulations: 100,
+      num_simulations: 1000,
     };
 
     const endpoint = isNoisy ? "/simulate-noisy" : "/simulate";
@@ -53,11 +41,7 @@ export default function QuantumSimApp() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
           isNoisy
-            ? {
-                ...body,
-                gate_error_prob: 0.05,
-                measurement_error_prob: 0.1,
-              }
+            ? { ...body, gate_error_prob: 0.05, measurement_error_prob: 0.1 }
             : body
         ),
       });
@@ -76,53 +60,82 @@ export default function QuantumSimApp() {
     const filtered = allQubits.filter((q) => Number.isInteger(q) && q >= 0);
     const numQubits = filtered.length ? Math.max(...filtered) + 1 : 1;
 
+    // Build timeline: alternate gate and line columns
+    const timeline = [];
+
+    gates.forEach((gate, i) => {
+      const gateCol = Array(numQubits).fill(null);
+      gate.qubits.forEach((q) => {
+        gateCol[q] = { type: "GATE", gate };
+      });
+      timeline.push(gateCol);
+
+      // Add connector column (line) after each gate column except the last
+      if (i < gates.length - 1) {
+        const lineCol = Array(numQubits).fill(null);
+        for (let q = 0; q < numQubits; q++) {
+          const current = gate.qubits.includes(q);
+          const nextGate = gates[i + 1]?.qubits.includes(q);
+          if (current && nextGate) {
+            lineCol[q] = { type: "LINE" };
+          }
+        }
+        timeline.push(lineCol);
+      }
+    });
+
     return (
-      <div className="circuit">
+      <div className={`circuit ${darkMode ? "dark" : ""}`}>
         {Array.from({ length: numQubits }).map((_, qIdx) => (
-          <div className="circuit-row" key={qIdx}>
+          <div className="circuit-row" key={`qrow-${qIdx}`}>
             <span className="qubit-label">q[{qIdx}]</span>
             <div className="circuit-track">
-              {gates.map((gate, gIdx) => {
-                const key = `g${gIdx}-q${qIdx}`;
-                const [control, target] = gate.qubits;
+              {timeline.map((col, colIdx) => {
+                const slot = col[qIdx];
+                const key = `c${colIdx}-q${qIdx}`;
 
-                if (gate.name === "CNOT" && gate.qubits.length === 2) {
-                  const isControl = qIdx === control;
-                  const isTarget = qIdx === target;
-                  const between =
-                    qIdx > Math.min(control, target) &&
-                    qIdx < Math.max(control, target);
+                if (!slot) return <div key={key} className="spacer" />;
 
-                  if (isControl) {
-                    return (
-                      <div className="gate cnot-control" key={key}>
-                        ●
-                        <div className="cnot-line" />
-                      </div>
-                    );
-                  } else if (isTarget) {
-                    return (
-                      <div className="gate cnot-target" key={key}>
-                        ⊕
-                        <div className="cnot-line" />
-                      </div>
-                    );
-                  } else if (between) {
-                    return <div key={key} className="cnot-bridge" />;
-                  } else {
-                    return <div key={key} className="spacer" />;
-                  }
+                if (slot.type === "LINE") {
+                  return <div key={key} className="line-segment" />;
                 }
 
-                if (gate.qubits.includes(qIdx)) {
+                if (slot.type === "GATE") {
+                  const gate = slot.gate;
+                  if (gate.name === "CNOT" && gate.qubits.length === 2) {
+                    const [control, target] = gate.qubits;
+                    if (qIdx === control) {
+                      return (
+                        <div className="gate cnot-control" key={key}>
+                          ●
+                          <div className="cnot-line" />
+                        </div>
+                      );
+                    } else if (qIdx === target) {
+                      return (
+                        <div className="gate cnot-target" key={key}>
+                          ⊕
+                          <div className="cnot-line" />
+                        </div>
+                      );
+                    } else if (
+                      qIdx > Math.min(control, target) &&
+                      qIdx < Math.max(control, target)
+                    ) {
+                      return <div key={key} className="cnot-bridge" />;
+                    } else {
+                      return <div key={key} className="spacer" />;
+                    }
+                  }
+
                   return (
                     <div key={key} className="gate">
                       {gate.name}
                     </div>
                   );
-                } else {
-                  return <div key={key} className="spacer" />;
                 }
+
+                return <div key={key} className="line-segment faded" />;
               })}
             </div>
           </div>
@@ -132,70 +145,34 @@ export default function QuantumSimApp() {
   };
 
   return (
-    <div style={{ padding: 24, backgroundColor: "#f3f4f6", minHeight: "100vh" }}>
-      <h1 style={{ fontSize: 24, fontWeight: "bold", marginBottom: 16 }}>
-        Quantum Circuit Simulator
-      </h1>
+    <div className={`container ${darkMode ? "dark" : ""}`}>
+      <h1>Quantum Circuit Simulator</h1>
 
-      <div
-        style={{
-          backgroundColor: "white",
-          borderRadius: 12,
-          padding: 16,
-          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-          marginBottom: 24,
-        }}
-      >
-        <h2 style={{ fontWeight: "600", marginBottom: 8 }}>Quantum Circuit Code</h2>
+      <div className="panel">
+        <h2>Quantum Circuit Code</h2>
         <textarea
-          rows={8}
-          style={{
-            width: "100%",
-            borderRadius: 8,
-            border: "1px solid #ccc",
-            padding: 12,
-            fontFamily: "monospace",
-            resize: "vertical",
-          }}
+          rows={6}
           value={code}
           onChange={(e) => setCode(e.target.value)}
         />
-        <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
-          <button onClick={handleSimulate} style={{ padding: "8px 16px", cursor: "pointer" }}>
-            Simulate
-          </button>
+        <div className="buttons">
+          <button onClick={handleSimulate}>Simulate</button>
           <button
             onClick={() => setIsNoisy(!isNoisy)}
-            style={{
-              padding: "8px 16px",
-              backgroundColor: isNoisy ? "orange" : "gray",
-              color: "white",
-              border: "none",
-              borderRadius: 4,
-              cursor: "pointer",
-            }}
+            className={isNoisy ? "noisy" : ""}
           >
             {isNoisy ? "Noisy Mode: ON" : "Noisy Mode: OFF"}
           </button>
+          <button onClick={() => setDarkMode(!darkMode)}>Toggle Dark Mode</button>
         </div>
       </div>
 
-      <h2 style={{ fontSize: 18, fontWeight: "600", marginBottom: 8 }}>
-        Circuit Visualization
-      </h2>
+      <h2>Circuit Visualization</h2>
       {renderCircuit()}
 
       {results && (
-        <div
-          style={{
-            backgroundColor: "white",
-            borderRadius: 12,
-            padding: 16,
-            marginTop: 24,
-            boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-          }}
-        >
-          <h3 style={{ fontWeight: "600", marginBottom: 8 }}>Simulation Results</h3>
+        <div className="panel">
+          <h3>Simulation Results</h3>
           {Object.entries(results).map(([state, count]) => (
             <div key={state}>
               {state}: {count}

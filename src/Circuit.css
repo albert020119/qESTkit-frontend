@@ -1,8 +1,67 @@
+:root {
+  --bg: #0f172a;
+  --fg: #f1f5f9;
+  --panel: #1e293b;
+  --line: #94a3b8;
+  --gate-bg: linear-gradient(to bottom right, #3b82f6, #2563eb);
+}
+
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.container {
+  padding: 24px;
+  background-color: var(--bg);
+  min-height: 100vh;
+  color: var(--fg);
+}
+
+.panel {
+  background-color: var(--panel);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  margin-bottom: 24px;
+}
+
+textarea {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #475569;
+  padding: 12px;
+  font-family: monospace;
+  background: #1e293b;
+  color: white;
+  resize: vertical;
+}
+
+button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #3b82f6;
+  color: white;
+  font-weight: bold;
+}
+
+button.noisy {
+  background: orange;
+  color: black;
+}
+
+button + button {
+  margin-left: 12px;
+}
+
 .circuit {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 16px;
+  gap: 12px;
   overflow-x: auto;
   padding-bottom: 24px;
 }
@@ -10,77 +69,95 @@
 .circuit-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .qubit-label {
   width: 60px;
   font-weight: bold;
   font-family: monospace;
-  color: #4b5563;
+  color: var(--fg);
 }
 
 .circuit-track {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 0;
   position: relative;
+  padding-left: 2px;
 }
 
 .gate {
-  min-width: 40px;
-  min-height: 36px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  background: linear-gradient(to bottom right, #3b82f6, #2563eb);
+  width: 48px;
+  height: 48px;
+  background: var(--gate-bg);
   color: white;
-  font-size: 14px;
   font-family: monospace;
-  text-align: center;
+  font-size: 14px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.15s ease;
-  cursor: grab;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  position: relative;
+  z-index: 2;
 }
 
-.gate:hover {
-  transform: scale(1.1);
+.line-segment {
+  width: 25px;
+  height: 2px;
+  background: var(--line);
+  align-self: center;
 }
 
 .spacer {
-  width: 40px;
-  height: 36px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
 .cnot-control,
 .cnot-target {
-  background-color: #1e293b;
-  color: white;
+  width: 48px;
+  height: 48px;
+  background-color: #1e40af;
+  border-radius: 50%;
   font-size: 20px;
   font-weight: bold;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  text-align: center;
-  line-height: 36px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
 }
 
 .cnot-line {
   position: absolute;
-  top: 36px;
+  top: 48px;
   left: 50%;
   width: 2px;
-  height: calc(100% - 36px);
-  background-color: #4b5563;
+  height: calc(100% - 48px);
+  background: var(--line);
   transform: translateX(-50%);
   z-index: 0;
 }
 
 .cnot-bridge {
   width: 2px;
-  background-color: #4b5563;
-  height: 36px;
+  background-color: var(--line);
+  height: 48px;
   margin: 0 auto;
+}
+
+.line-segment {
+  width: 40px;
+  height: 2px;
+  background: #94a3b8;
+  align-self: center;
+}
+
+.line-segment.faded {
+  opacity: 0.3;
 }
