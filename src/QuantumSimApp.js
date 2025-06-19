@@ -9,6 +9,7 @@ import "./components/GateToolbox/GateToolbox.css";
 import { useDragDrop } from "./hooks/useDragDrop";
 import ThemeToggle from "./ThemeToggle";
 import { useTheme } from "./theme/ThemeContext";
+import Chatbot from "./chatbot/Chatbot";
 
 // ========= Helper functions from bloch-sphere branch =========
 function getBlochAnglesFromResults(results, qubitIdx = 0) {
@@ -146,12 +147,14 @@ export default function QuantumSimApp() {
       column: index
     }));
     setCircuit(processedGates);
+    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
     if (circuit.length > 0 && !isManualEdit) {
       setCode(generateCodeFromCircuit());
     }
+    // eslint-disable-next-line
   }, [circuit]);
 
   const handleDrop = (gate, position) => {
@@ -422,6 +425,9 @@ export default function QuantumSimApp() {
               </div>
             )}
           </div>
+          
+          {/* Chatbot added at the end of the main content */}
+          <Chatbot circuitText={code} />
         </div>
       </div>
     </div>
