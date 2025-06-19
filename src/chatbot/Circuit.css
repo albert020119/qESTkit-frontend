@@ -162,10 +162,27 @@ button + button {
   opacity: 0.3;
 }
 
+.chatbot-container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1000;
+  width: 0;
+}
+
+.chatbot-container button,
+.chatbot-container .chatbot-popup {
+  pointer-events: auto;
+}
+
 .chatbot-fab {
   position: fixed;
+  bottom: auto;
   top: 50%;
   right: 32px;
+  left: auto;
   transform: translateY(-50%);
   background: linear-gradient(135deg, #3b82f6, #06b6d4);
   color: #fff;
@@ -189,10 +206,13 @@ button + button {
 
 .chatbot-popup {
   position: fixed;
+  bottom: auto;
   top: 50%;
   right: 32px;
+  left: auto;
   transform: translateY(-50%);
   width: 340px;
+  max-height: 80vh;
   background: #222;
   color: #fff;
   border-radius: 16px;

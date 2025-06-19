@@ -404,14 +404,11 @@ export default function QuantumSimApp() {
                 </div>
               ))}
             </div>
-          )}
-
-          {/* Removed the standalone BlochSphere from here since it's now in the toolbox */}
-          
-          {/* Chatbot added at the end of the main content */}
-          <Chatbot circuitText={code} />
+          )}          {/* Removed the standalone BlochSphere from here since it's now in the toolbox */}
         </div>
       </div>
+      {/* Chatbot positioned absolutely outside the main flow */}
+      <Chatbot circuitText={code} />
     </div>
   );
 }

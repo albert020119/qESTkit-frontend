@@ -238,23 +238,60 @@ button + button {
   background-color: rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   padding: 16px;
-  height: 200px;
+  min-height: 300px;
+}
+
+.quantum-state-equation {
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  line-height: 2;
+}
+
+.state-psi {
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.state-term {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 5px;
+}
+
+.state-plus {
+  margin: 0 5px;
+}
+
+.state-amplitude {
+  font-weight: bold;
+}
+
+.state-ket {
+  margin-left: 3px;
 }
 
 .circuit-diagram {
   display: flex;
   flex-direction: column;
-  height: 100%;
 }
 
 .circuit-qubits {
   flex: 0 0 auto;
+  margin-bottom: 20px;
 }
 
 .circuit-qubit-line {
   display: flex;
   align-items: center;
   margin-bottom: 16px;
+  position: relative;
 }
 
 .qubit-label {
@@ -262,41 +299,80 @@ button + button {
   text-align: right;
   margin-right: 10px;
   font-family: monospace;
+  font-weight: bold;
 }
 
 .qubit-wire {
   flex-grow: 1;
   height: 2px;
   background-color: var(--line);
+  margin-right: 50px;
 }
 
-.circuit-probability-bars {
+.measurement-box {
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--line);
+  border-radius: 4px;
   display: flex;
-  justify-content: space-around;
-  align-items: flex-end;
-  height: 120px;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.2);
+  position: absolute;
+  right: 10px;
+}
+
+.measurement-symbol {
+  font-family: 'Times New Roman', Times, serif;
+  font-style: italic;
+  font-weight: bold;
+}
+
+.measurement-results {
   margin-top: 20px;
 }
 
-.probability-bar {
-  width: 40px;
-  min-height: 4px;
-  background-color: #3b82f6;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  border-radius: 4px 4px 0 0;
-  transition: height 0.5s ease;
-  position: relative;
+.measurement-results h5 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 14px;
 }
 
-.bar-label {
-  position: absolute;
-  bottom: -20px;
-  font-size: 12px;
+.probability-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.probability-item {
+  display: grid;
+  grid-template-columns: 60px 1fr 60px;
+  align-items: center;
+  gap: 10px;
+}
+
+.state-label {
   font-family: monospace;
-  white-space: nowrap;
+  text-align: right;
+}
+
+.probability-bar-container {
+  height: 20px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.probability-bar {
+  height: 100%;
+  background-color: #3b82f6;
+  transition: width 0.5s ease;
+  min-width: 2px;
+}
+
+.probability-value {
+  font-size: 14px;
+  font-family: monospace;
 }
 
 .close-button {
@@ -346,6 +422,18 @@ button + button {
 
 .dark .mini-circuit {
   background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark .quantum-state-equation {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark .probability-bar-container {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .measurement-box {
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
 .dark .vector-item {

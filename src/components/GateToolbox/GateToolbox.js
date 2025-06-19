@@ -129,38 +129,64 @@ const GateToolbox = ({ onGateDragStart, qSphereVectors = [] }) => {
                       </div>
                     </div>
                   )}
-                  
-                  {activeCircuitView === 'circuit' && (
+                    {activeCircuitView === 'circuit' && (
                     <div className="circuit-representation">
-                      <h4>Mini Circuit Representation</h4>
+                      <h4>Quantum State Measurement</h4>
                       <div className="mini-circuit">
                         {qSphereVectors.length > 0 ? (
-                          <div className="circuit-diagram">
-                            <div className="circuit-qubits">
-                              {Array.from({ length: Math.min(4, Math.log2(Math.max(qSphereVectors.length, 2))) }, (_, i) => (
-                                <div key={i} className="circuit-qubit-line">
-                                  <div className="qubit-label">q{i}:</div>
-                                  <div className="qubit-wire"></div>
-                                </div>
-                              ))}
-                            </div>
-                            <div className="circuit-probability-bars">
+                          <>
+                            <div className="quantum-state-equation">
+                              <span className="state-psi">|ψ⟩ = </span>
                               {qSphereVectors.map((vector, idx) => (
-                                <div 
-                                  key={idx} 
-                                  className="probability-bar"
-                                  style={{
-                                    height: `${vector.prob * 100}%`,
-                                    backgroundColor: getVectorColor(idx)
-                                  }}
-                                >
-                                  <span className="bar-label">{vector.state}</span>
-                                </div>
+                                <span key={idx} className="state-term">
+                                  {idx > 0 && <span className="state-plus">+</span>}
+                                  <span 
+                                    className="state-amplitude"
+                                    style={{ color: getVectorColor(idx) }}
+                                  >
+                                    {Math.sqrt(vector.prob).toFixed(2)}
+                                  </span>
+                                  <span className="state-ket">|{vector.state}⟩</span>
+                                </span>
                               ))}
                             </div>
-                          </div>
+                            <div className="circuit-diagram">
+                              <div className="circuit-qubits">
+                                {Array.from({ length: Math.min(4, Math.log2(Math.max(qSphereVectors.length, 2))) }, (_, i) => (
+                                  <div key={i} className="circuit-qubit-line">
+                                    <div className="qubit-label">q{i}:</div>
+                                    <div className="qubit-wire"></div>
+                                    {/* Measurement indicators */}
+                                    <div className="measurement-box">
+                                      <div className="measurement-symbol">M</div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="measurement-results">
+                                <h5>Measurement Probabilities</h5>
+                                <div className="probability-bars">
+                                  {qSphereVectors.map((vector, idx) => (
+                                    <div key={idx} className="probability-item">
+                                      <div className="state-label">|{vector.state}⟩</div>
+                                      <div className="probability-bar-container">
+                                        <div 
+                                          className="probability-bar"
+                                          style={{
+                                            width: `${vector.prob * 100}%`,
+                                            backgroundColor: getVectorColor(idx)
+                                          }}
+                                        />
+                                      </div>
+                                      <div className="probability-value">{(vector.prob * 100).toFixed(1)}%</div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </>
                         ) : (
-                          <p>Run a simulation to see the circuit representation</p>
+                          <p>Run a simulation to see the quantum state measurements</p>
                         )}
                       </div>
                     </div>

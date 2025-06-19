@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import "../Circuit.css";
+import "./Circuit.css";
 
 export default function Chatbot({ circuitText }) {
   const [open, setOpen] = useState(false);
@@ -40,9 +40,8 @@ export default function Chatbot({ circuitText }) {
       setMessages((msgs) => [...msgs, { from: "bot", text: "Error: " + err.message }]);
     }
   };
-
   return (
-    <div>
+    <div className="chatbot-container">
       {!open && (
         <button
           className="chatbot-fab"
