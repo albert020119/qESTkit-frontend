@@ -8,7 +8,7 @@ import "./components/GateToolbox/GateToolbox.css";
 import { useDragDrop } from "./hooks/useDragDrop";
 
 export default function QuantumSimApp() {
-  const [code, setCode] = useState("// Example: H 0\nH 0\nCNOT 0 1\n");
+  const [code, setCode] = useState("H 0\nCNOT 0 1\n");
   const [results, setResults] = useState(null);
   const [isNoisy, setIsNoisy] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
@@ -20,78 +20,117 @@ export default function QuantumSimApp() {
   // State for gate selection prompts
   const [gatePrompt, setGatePrompt] = useState(null);
   // State to track if we're in "remove gate" mode
-  const [removeModeActive, setRemoveModeActive] = useState(false);
-  const parseCodeToGates = (rawCode) => {
+  const [removeModeActive, setRemoveModeActive] = useState(false);  const parseCodeToGates = (rawCode) => {
+    if (!rawCode || typeof rawCode !== 'string') return [];
+    
     const lines = rawCode.split("\n");
     const gates = [];
+    
+    // Gates that have parameters
+    const paramGates = ['Ph', 'Rx', 'Ry', 'Rz'];
+    
     for (const line of lines) {
-      const parts = line.trim().split(" ");
-      if (parts.length < 2) continue;
+      const trimmedLine = line.trim();
+      if (!trimmedLine || trimmedLine.startsWith("//")) continue; // Skip empty lines and comments
+      
+      const parts = trimmedLine.split(" ").filter(part => part.trim() !== "");
+      if (parts.length < 1) continue;
+      
       const name = parts[0].toUpperCase();
-      const qubits = parts.slice(1).map(Number).filter((q) => Number.isInteger(q) && q >= 0);
-      if (qubits.length > 0) gates.push({ name, qubits });
+      if (!name) continue;
+      
+      // Special handling for gates with parameters
+      if (paramGates.includes(name)) {
+        if (parts.length < 3) continue; // Need at least gate name, param, and one qubit
+        
+        const param = parseFloat(parts[1]);
+        if (isNaN(param)) continue; // Invalid parameter
+        
+        const qubits = parts.slice(2).map(Number).filter((q) => Number.isInteger(q) && q >= 0);
+        if (qubits.length > 0) {
+          gates.push({ 
+            name, 
+            qubits,
+            param,
+            hasParam: true
+          });
+        }
+      } else {
+        // Standard gates without parameters
+        if (parts.length < 2) continue; // Need at least gate name and one qubit
+        
+        const qubits = parts.slice(1).map(Number).filter((q) => Number.isInteger(q) && q >= 0);
+        if (qubits.length > 0) {
+          gates.push({ name, qubits });
+        }
+      }
     }
     return gates;
   };
-  
   // Generate code from circuit
   const generateCodeFromCircuit = () => {
-    let generatedCode = "// Generated from circuit editor\n";
+    // Start with an empty string, no marker
+    let generatedCode = "";
     circuit.forEach(gate => {
-      generatedCode += `${gate.name} ${gate.qubits.join(" ")}\n`;
+      // Include parameter for gates that have them
+      if (gate.hasParam && gate.param !== undefined) {
+        generatedCode += `${gate.name} ${gate.param} ${gate.qubits.join(" ")}\n`;
+      } else {
+        generatedCode += `${gate.name} ${gate.qubits.join(" ")}\n`;
+      }
     });
     return generatedCode;
   };
-    // Update code when circuit changes
+  // Flag to track whether changes are coming from manual edits
+  const [isManualEdit, setIsManualEdit] = useState(false);
+
+  // Initialize circuit from code on component mount
   useEffect(() => {
-    if (circuit.length > 0) {
+    // Parse the initial code to set up circuit
+    const parsedGates = parseCodeToGates(code);
+    const processedGates = parsedGates.map((gate, index) => ({
+      ...gate,
+      column: index
+    }));
+    setCircuit(processedGates);
+  }, []);  // Empty dependency array means this runs once on mount
+  // Update code when circuit changes (but only if not from manual edit)
+  useEffect(() => {
+    if (circuit.length > 0 && !isManualEdit) {
       setCode(generateCodeFromCircuit());
     }
+    // We don't reset isManualEdit here anymore
   }, [circuit]);
-  
-  // Update circuit when code changes
-  useEffect(() => {
-    // Don't process auto-generated code to avoid circular updates
-    if (code.includes("// Generated from circuit editor")) {
-      return;
-    }
-    
-    // Parse the code and convert it to circuit format
-    const parsedGates = parseCodeToGates(code);
-    
-    // Process gates and assign columns
-    const processedGates = [];
-    let currentColumn = 0;
-    const usedColumns = new Set();
-    
-    parsedGates.forEach(gate => {
-      // Find the next available column
-      while(usedColumns.has(currentColumn)) {
-        currentColumn++;
-      }
-      
-      // Add gate with column information
-      processedGates.push({
-        ...gate,
-        column: currentColumn
-      });
-      
-      // Mark column as used
-      usedColumns.add(currentColumn);
-      currentColumn++;
-    });
-    
-    // Update circuit if it's different
-    if (JSON.stringify(processedGates) !== JSON.stringify(circuit)) {
-      setCircuit(processedGates);
-    }
-  }, [code]);
-    // Handle drag and drop actions
+  // Remove duplicate useEffect
+  // Handle drag and drop actions
   const handleDrop = (gate, position) => {
     const { qubit, column } = position;
     
+    // For gates with parameters, prompt for parameter value
+    if (gate.hasParam) {
+      const param = prompt(`Enter ${gate.paramName || 'parameter'} value for ${gate.name} gate:`, '0');
+      if (param === null) return; // User cancelled
+      
+      const paramValue = parseFloat(param);
+      if (isNaN(paramValue)) {
+        alert("Please enter a valid number for the parameter");
+        return;
+      }
+      
+      // Create gate with parameter
+      const newGate = {
+        ...gate,
+        param: paramValue,
+        qubits: [qubit],
+        column
+      };
+      
+      addGateToCircuit(newGate);
+      return;
+    }
+    
     // If this is a multi-qubit gate that requires selection of control/target qubits
-    if ((gate.controlQubits && gate.targetQubits) || gate.name === 'CNOT' || gate.name === 'SWAP') {
+    if ((gate.controlQubits && gate.targetQubits) || gate.name === 'CNOT' || gate.name === 'CZ') {
       // Save the current gate and position for later processing
       setGatePrompt({
         gate,
@@ -209,39 +248,45 @@ export default function QuantumSimApp() {
       }));
     }
   };
-  const handleSimulate = async () => {
-    // Use the current circuit for simulation if available, otherwise parse from code
-    const gates = circuit.length > 0 
-      ? circuit.map(({ name, qubits }) => ({ name, qubits })) 
-      : parseCodeToGates(code);
-      
-    if (!gates.length) return alert("No valid gates found.");
+const handleSimulate = async () => {
+  // Use the current circuit for simulation if available, otherwise parse from code
+  const gates = circuit.length > 0 
+    ? circuit.map(({ name, qubits }) => ({ name, qubits })) 
+    : parseCodeToGates(code);
 
-    const body = {
-      gates,
-      num_simulations: 1000,
-    };
+  if (!gates.length) return alert("No valid gates found.");
 
-    const endpoint = isNoisy ? "/simulate-noisy" : "/simulate";
+  // Determine the number of qubits based on the circuit or code
+  const allQubits = gates.flatMap((g) => g.qubits);
+  const filteredQubits = allQubits.filter((q) => Number.isInteger(q) && q >= 0);
+  const numQubits = filteredQubits.length ? Math.max(...filteredQubits) + 1 : 1;
 
-    try {
-      const res = await fetch(`http://localhost:8000${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          isNoisy
-            ? { ...body, gate_error_prob: 0.05, measurement_error_prob: 0.1 }
-            : body
-        ),
-      });
-
-      if (!res.ok) throw new Error("API Error");
-      const data = await res.json();
-      setResults(data);
-    } catch (err) {
-      alert("Simulation failed: " + err.message);
-    }
+  const body = {
+    num_qubits: numQubits,
+    gates,
+    num_simulations: 1000,
   };
+
+  const endpoint = isNoisy ? "/simulate-noisy" : "/simulate";
+
+  try {
+    const res = await fetch(`http://localhost:8000${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(
+        isNoisy
+          ? { ...body, gate_error_prob: 0.05, measurement_error_prob: 0.1 }
+          : body
+      ),
+    });
+
+    if (!res.ok) throw new Error("API Error");
+    const data = await res.json();
+    setResults(data);
+  } catch (err) {
+    alert("Simulation failed: " + err.message);
+  }
+};
 
   const renderCircuit = () => {
     const gates = parseCodeToGates(code);
@@ -380,11 +425,35 @@ export default function QuantumSimApp() {
           </div>
           
           <div className="panel">
-            <h2>Quantum Circuit Code</h2>
-            <textarea
+            <h2>Quantum Circuit Code</h2>            <textarea
               rows={6}
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
+              value={code}              onChange={(e) => {
+                const newCode = e.target.value;
+                
+                // First set the manual edit flag
+                setIsManualEdit(true);
+                
+                // Then update the code
+                setCode(newCode);
+                
+                // Only try to parse valid gate instructions
+                if (newCode.trim()) {
+                  // Process code changes to update the circuit
+                  try {
+                    const parsedGates = parseCodeToGates(newCode);
+                    if (parsedGates.length > 0) {
+                      const processedGates = parsedGates.map((gate, index) => ({
+                        ...gate,
+                        column: index
+                      }));
+                      setCircuit(processedGates);
+                    }
+                  } catch (err) {
+                    // Just ignore parsing errors for incomplete inputs
+                    console.log("Parsing in progress...");
+                  }
+                }
+              }}
             />
             <small>You can also directly edit the code above</small>
           </div>
