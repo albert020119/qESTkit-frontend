@@ -8,7 +8,6 @@ import ThemeToggle from "./ThemeToggle";
 import { useTheme } from "./theme/ThemeContext";
 import GateToolbox from "./components/GateToolbox/GateToolbox";
 import CircuitBoard from "./components/Circuit/CircuitBoard";
-import { QasmExporter } from "./converter";
 import "./components/Circuit/CircuitBoard.css";
 import "./components/Circuit/CircuitBoardExtras.css";
 import "./components/GateToolbox/GateToolbox.css";
@@ -144,9 +143,6 @@ export default function QuantumSimApp() {
   const [showCreateReport, setShowCreateReport] = useState(false);
   const [showViewReports, setShowViewReports] = useState(false);
   const [reports, setReports] = useState([]);
-  
-  // QASM Export state
-  const [showQasmExport, setShowQasmExport] = useState(false);
 
   // DnD/circuit state:
   const [numQubits, setNumQubits] = useState(2);
@@ -155,11 +151,11 @@ export default function QuantumSimApp() {
   const [removeModeActive, setRemoveModeActive] = useState(false);
   const [isManualEdit, setIsManualEdit] = useState(false);
 
-  // ======= Parsing and circuit helpers =======
-  const parseCodeToGates = (rawCode) => {
+  // ======= Parsing and circuit helpers =======  const parseCodeToGates = (rawCode) => {
     if (!rawCode || typeof rawCode !== 'string') return [];
     const lines = rawCode.split("\n");
     const gates = [];
+    // These gates require a parameter (angle in radians)
     const paramGates = ['Ph', 'Rx', 'Ry', 'Rz'];
     for (const line of lines) {
       const trimmedLine = line.trim();
@@ -216,17 +212,40 @@ export default function QuantumSimApp() {
     }
     // eslint-disable-next-line
   }, [circuit]);
-
   const handleDrop = (gate, position) => {
     const { qubit, column } = position;
     if (gate.hasParam) {
-      const param = prompt(`Enter ${gate.paramName || 'parameter'} value for ${gate.name} gate:`, '0');
+      // For rotation gates, prompt for angle in radians
+      const isRotationGate = ['Rx', 'Ry', 'Rz', 'Ph'].includes(gate.name);
+      const promptMessage = isRotationGate 
+        ? `Enter ${gate.paramName || 'parameter'} value in radians for ${gate.name} gate (e.g., 3.14 for π):`
+        : `Enter ${gate.paramName || 'parameter'} value for ${gate.name} gate:`;
+        
+      const param = prompt(promptMessage, isRotationGate ? 'π/2' : '0');
       if (param === null) return;
-      const paramValue = parseFloat(param);
+      
+      // Handle special inputs like π/2
+      let paramValue;
+      if (param.includes('π') || param.includes('pi')) {
+        // Replace π or pi with Math.PI and evaluate
+        try {
+          const evalParam = param
+            .replace(/π/g, 'Math.PI')
+            .replace(/pi/g, 'Math.PI');
+          paramValue = eval(evalParam);
+        } catch (e) {
+          alert("Invalid expression. Please enter a valid number or expression.");
+          return;
+        }
+      } else {
+        paramValue = parseFloat(param);
+      }
+      
       if (isNaN(paramValue)) {
         alert("Please enter a valid number for the parameter");
         return;
       }
+      
       const newGate = {
         ...gate,
         param: paramValue,
@@ -304,10 +323,6 @@ export default function QuantumSimApp() {
   const toggleRemoveMode = () => {
     setRemoveModeActive(prev => !prev);
   };
-  
-  const handleExportToQasm = () => {
-    setShowQasmExport(true);
-  };
 
   const { handleDragStart, handleDragOver, handleDrop: onDrop } = useDragDrop((gate, position) => {
     handleDrop(gate, position);
@@ -325,15 +340,16 @@ export default function QuantumSimApp() {
       }));
     }
   };
-
   // ======= Simulation & Bloch Sphere logic =======
   const handleSimulate = async () => {
     const gates = circuit.length > 0
-      ? circuit.map(({ name, qubits, param }) => ({ 
-          name, 
-          qubits, 
-          ...(param !== undefined ? { param } : {})
-        }))
+      ? circuit.map(({ name, qubits, param, hasParam }) => {
+          // Include the param for rotation gates
+          if (hasParam && param !== undefined) {
+            return { name, qubits, param };
+          }
+          return { name, qubits };
+        })
       : parseCodeToGates(code);
 
     if (!gates.length) return alert("No valid gates found.");
@@ -444,14 +460,6 @@ export default function QuantumSimApp() {
           onClose={() => setShowViewReports(false)}
           reports={reports}
         />
-        
-        {/* QASM Export Modal */}
-        <QasmExporter
-          isOpen={showQasmExport}
-          onClose={() => setShowQasmExport(false)}
-          circuit={circuit}
-          numQubits={numQubits}
-        />
 
         <h1>Quantum Circuit Simulator</h1>
         <div className="layout">
@@ -471,7 +479,6 @@ export default function QuantumSimApp() {
                 onRemoveQubit={handleRemoveQubit}
                 onDragOver={handleDragOver}
                 onDrop={onDrop}
-                onExportQasm={handleExportToQasm}
                 onCellClick={(params) => {
                   if (params.cancel) {
                     setGatePrompt(null);
@@ -534,9 +541,7 @@ export default function QuantumSimApp() {
                   </div>
                 ))}
               </div>
-            )}
-
-            {/* Chatbot added at the end of the main content */}
+            )}            {/* Chatbot added at the end of the main content */}
             <Chatbot circuitText={code} />
           </div>
         </div>
