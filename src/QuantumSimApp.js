@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import "./Circuit.css";
 
+import Chatbot from "./chatbot/Chatbot";
+
+
 export default function QuantumSimApp() {
   const [code, setCode] = useState("// Example: H 0\nH 0\nCNOT 0 1\n");
   const [results, setResults] = useState(null);
@@ -140,6 +143,7 @@ export default function QuantumSimApp() {
             </div>
           </div>
         ))}
+        <Chatbot />
       </div>
     );
   };
