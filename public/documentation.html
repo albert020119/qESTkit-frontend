@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Quantum Simulator Documentation</title>
+  <link rel="stylesheet" href="documentation.css" />
+</head>
+<body>
+  <div class="wrapper">
+    <div class="sidebar">
+      <h2>Docs</h2>
+
+      <div>
+        <a href="#" onclick="showSection('helpIntro')">Help</a>
+        <div class="indent">
+          <a href="#" onclick="showSection('simulate')">• How to simulate circuit</a>
+          <a href="#" onclick="showSection('syntax')">• Gate Syntax</a>
+          <a href="#" onclick="showSection('noisy')">• Noisy Mode</a>
+        </div>
+      </div>
+
+      <div>
+        <a href="#" onclick="showSection('theoryIntro')">Theoretical Documentation</a>
+        <div class="indent">
+          <a href="#" onclick="showSection('qubit')">• What is a Qubit?</a>
+          <a href="#" onclick="showSection('gates')">• Quantum Gates</a>
+          <a href="#" onclick="showSection('algorithms')">• Common Algorithms</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div id="help" class="section">
+        <h1>Welcome to the Documentation</h1>
+        <p>Select a section from the sidebar.</p>
+      </div>
+
+      <div id="helpIntro" class="section" style="display:none">
+  <h1>Help Section</h1>
+  <p>Here you’ll find practical guidance on how to use the simulator : from how to write quantum circuits and gate syntax, to enabling noisy mode.</p>
+</div>
+
+<div id="theoryIntro" class="section" style="display:none">
+  <h1>Theoretical Documentation</h1>
+  <p>This section helps you learn the core principles of quantum computing : what a qubit is, how gates operate, and how key algorithms work.</p>
+</div>
+
+      <div id="simulate" class="section" style="display:none">
+  <h1>How to Simulate a Circuit</h1>
+
+  <p>
+    You can build and run a quantum circuit using <strong>two main methods</strong>:
+  </p>
+
+  <ul>
+    <li><strong>Code Editor</strong>: Directly type gate operations using a simple format like <code>H 0</code> or <code>CNOT 0 1</code>.</li>
+    <li><strong>Drag & Drop</strong>: Use the toolbox on the left to drag gates into the circuit grid.</li>
+  </ul>
+
+  <p>Below is a screenshot of the simulator in action:</p>
+
+  <img src="circuit_q.png" alt="Quantum Simulator Interface" style="width: 1000px; max-width: 100%; border-radius: 8px; margin: 16px 0;" />
+
+  <p>
+    In this example, we apply a <code>Hadamard (H)</code> gate to <code>q[0]</code>, placing it into superposition. 
+    Then we use a <code>CNOT</code> gate with <code>q[0]</code> as control and <code>q[1]</code> as target.
+  </p>
+
+  <p>
+    This circuit creates an <strong>entangled Bell state</strong>:  
+    <pre>(|00⟩ + |11⟩) / √2</pre>  
+    When measured, both qubits collapse to the same value — either both 0 or both 1 — with equal probability.
+  </p>
+
+  <p>
+    Once the circuit is built, click the <strong>Simulate Circuit</strong> button to run it and view the measurement results.
+  </p>
+</div>
+
+
+
+<div id="syntax" class="section" style="display:none">
+  <h1>Gate Syntax</h1>
+  <p>This simulator lets you program circuits using plain text. Each line corresponds to one gate instruction.</p>
+
+  <h2>Format</h2>
+  <p><code>GATE [angle] qubit(s)</code></p>
+  <ul>
+    <li>Single-qubit: <code>X 0</code>, <code>H 1</code></li>
+    <li>Two-qubit: <code>CNOT 0 1</code>, <code>CZ 1 0</code></li>
+    <li>Rotation/phase gates: <code>Rx 3.14 0</code>, <code>Rz 1.57 1</code></li>
+  </ul>
+
+  <h2>Examples</h2>
+  <pre>
+H 0
+CNOT 0 1
+X 0
+CZ 0 1
+Z 0
+S 0
+T 1
+Identity 1
+Ph 6 1
+Rx 6 1
+Ry 65 1
+Rz 56 0
+  </pre>
+
+  <p>
+    For gates that require an angle (like <code>Rx</code>, <code>Rz</code>, <code>Ph</code>), the angle is in radians and comes before the qubit index.
+  </p>
+</div>
+
+
+
+
+
+      
+      <div id="noisy" class="section" style="display:none">
+  <h1>Noisy Mode</h1>
+
+  <p>
+    In the real world, quantum systems are subject to noise — unwanted interactions with their environment that cause errors.
+    Noisy Mode in this simulator helps you understand how noise affects quantum computations by simulating realistic imperfections.
+  </p>
+
+  <h2>What Kind of Noise Is Simulated?</h2>
+  <ul>
+    <li><strong>Gate errors</strong>: Applied gates may randomly behave incorrectly.</li>
+    <li><strong>Measurement errors</strong>: The measured output bit may flip with some probability.</li>
+  </ul>
+
+
+  <h2>Why Use Noisy Mode?</h2>
+  <ul>
+    <li>To simulate the behavior of real hardware like IBM Q or IonQ devices.</li>
+    <li>To study how quantum algorithms degrade under imperfections.</li>
+    <li>To prepare for quantum error correction or noise mitigation strategies.</li>
+  </ul>
+
+  <h2>When Should You Disable It?</h2>
+  <ul>
+    <li>When you want ideal, mathematically perfect results.</li>
+    <li>When debugging logic or learning basic quantum gates and circuits.</li>
+  </ul>
+
+  <h2>Summary</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Ideal Mode</th>
+        <th>Noisy Mode</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Realistic errors</td>
+        <td>❌</td>
+        <td>✅</td>
+      </tr>
+      <tr>
+        <td>Good for learning basics</td>
+        <td>✅</td>
+        <td>⚠️</td>
+      </tr>
+      <tr>
+        <td>Used in real devices</td>
+        <td>❌</td>
+        <td>✅</td>
+      </tr>
+      <tr>
+        <td>Supports error analysis</td>
+        <td>❌</td>
+        <td>✅</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+      <div id="qubit" class="section" style="display:none">
+  <h1>What is a Qubit?</h1>
+  <p>
+    A <strong>qubit</strong> (quantum bit) is the basic unit of quantum information. Unlike a classical bit which can be either <code>0</code> or <code>1</code>,
+    a qubit can exist in a <em>superposition</em> of both states:
+  </p>
+
+  <pre>|ψ⟩ = α|0⟩ + β|1⟩</pre>
+
+  <p>
+    Here, α and β are complex numbers representing probability amplitudes. The probabilities of measuring |0⟩ and |1⟩ are given by:
+  </p>
+  <pre>Pr(0) = |α|², Pr(1) = |β|²,  where |α|² + |β|² = 1</pre>
+
+  <h2>Superposition</h2>
+  <p>
+    Superposition means the qubit is "in both states" until it is measured. For example, with equal amplitudes:
+  </p>
+  <pre>|ψ⟩ = (1/√2)|0⟩ + (1/√2)|1⟩</pre>
+  <p>
+    The measurement outcome is random, but with 50% chance for either 0 or 1.
+  </p>
+
+  <h2>Bloch Sphere</h2>
+  <p>
+    Any single qubit pure state can be represented as a point on the Bloch sphere:
+  </p>
+  <pre>|ψ⟩ = cos(θ/2)|0⟩ + e^{iφ}sin(θ/2)|1⟩</pre>
+  <p>
+    Where θ and φ are angles in 3D space. This is a powerful geometric way to understand qubit transformations.
+  </p>
+
+  <h2>Entanglement</h2>
+  <p>
+    Qubits can also be entangled. In entangled states, measuring one qubit affects the state of the other, no matter how far apart they are.
+  </p>
+  <pre>Example: (|00⟩ + |11⟩) / √2</pre>
+</div>
+
+
+      <div id="gates" class="section" style="display:none">
+  <h1>Quantum Gates</h1>
+  <p>
+    Quantum gates are unitary operations that manipulate the state of one or more qubits.
+    They are reversible (except measurement) and correspond to matrices that rotate the qubit on the Bloch sphere.
+  </p>
+
+  <h2>Single-Qubit Gates</h2>
+
+  <h3>Hadamard (H)</h3>
+  <p>Places a qubit into equal superposition:</p>
+  <pre>
+H = (1/√2) [ [1,  1],
+             [1, -1] ]
+  </pre>
+  <p>Transforms |0⟩ to (|0⟩ + |1⟩)/√2 and |1⟩ to (|0⟩ - |1⟩)/√2</p>
+
+  <h3>Pauli Gates</h3>
+  <ul>
+    <li><strong>X gate</strong> – Bit-flip gate (like classical NOT)</li>
+    <pre>X = [ [0, 1], [1, 0] ]</pre>
+
+    <li><strong>Y gate</strong> – Bit and phase flip</li>
+    <pre>Y = [ [0, -i], [i, 0] ]</pre>
+
+    <li><strong>Z gate</strong> – Phase flip</li>
+    <pre>Z = [ [1, 0], [0, -1] ]</pre>
+  </ul>
+
+  <h3>Identity Gate (I)</h3>
+  <p>Leaves the qubit unchanged. Useful as a placeholder or timing alignment.</p>
+  <pre>I = [ [1, 0], [0, 1] ]</pre>
+
+  <h3>Phase Gates</h3>
+  <ul>
+    <li><strong>S gate</strong> – Square root of Z. Adds a 90° phase to |1⟩.</li>
+    <pre>S = [ [1, 0], [0, i] ]</pre>
+
+    <li><strong>T gate</strong> – Fourth root of Z. Adds a 45° phase to |1⟩.</li>
+    <pre>T = [ [1, 0], [0, exp(iπ/4)] ]</pre>
+
+    <li><strong>Ph(θ)</strong> – Arbitrary phase gate. Adds θ radians to |1⟩.</li>
+    <pre>Ph(θ) = [ [1, 0], [0, e^{iθ}] ]</pre>
+  </ul>
+
+  <h3>Rotation Gates</h3>
+  <p>These rotate the qubit around an axis on the Bloch sphere:</p>
+  <ul>
+    <li><strong>Rx(θ)</strong> – Rotates around the X-axis</li>
+    <li><strong>Ry(θ)</strong> – Rotates around the Y-axis</li>
+    <li><strong>Rz(θ)</strong> – Rotates around the Z-axis</li>
+  </ul>
+
+  <h2>Two-Qubit Gates</h2>
+
+  <h3>CNOT (Controlled-NOT)</h3>
+  <p>
+    Flips the target qubit if the control qubit is in state |1⟩. Used to create entanglement.
+  </p>
+
+  <h3>CZ (Controlled-Z)</h3>
+  <p>
+    Applies a Z gate to the target qubit only if the control qubit is |1⟩. Adds a phase shift of -1 to the |11⟩ state.
+  </p>
+
+  <h3>SWAP</h3>
+  <p>
+    Exchanges the states of two qubits: SWAP(|ab⟩) = |ba⟩.
+  </p>
+
+  <h2>Measurement (Not a gate)</h2>
+  <p>
+    Collapses a qubit to |0⟩ or |1⟩ based on its probability amplitudes. This is the only non-reversible operation in quantum computing.
+  </p>
+</div>
+
+
+<div id="algorithms" class="section" style="display:none">
+  <h1>Common Quantum Algorithms</h1>
+
+  <h2>Grover’s Search Algorithm</h2>
+  <p>
+    Grover’s algorithm is used to search an unsorted database of N items in only <strong>√N</strong> queries, compared to N/2 queries classically on average.
+    It uses an <em>oracle</em> to mark the solution and then amplifies its probability through a process called <strong>amplitude amplification</strong>.
+    Although it's not exponential speedup, it's significant for certain types of search problems.
+  </p>
+  <p>
+    A typical Grover circuit includes Hadamard gates to create superposition, oracle function to flip the phase of the correct answer, and a diffusion operator to amplify it.
+  </p>
+
+  <h2>Quantum Teleportation</h2>
+  <p>
+    Quantum teleportation allows a qubit's quantum state to be transmitted from one location to another <em>without physically sending the qubit itself</em>.
+    It requires a pair of entangled qubits shared between the sender (Alice) and the receiver (Bob).
+  </p>
+  <p>
+    Alice performs a Bell-state measurement on her qubit and the state she wants to teleport, then sends the two classical bits of result to Bob.
+    Using those bits, Bob applies Pauli operations (X and/or Z) to reconstruct the original state on his end.
+  </p>
+  <p>
+    Note: Teleportation <strong>does not clone</strong> the state — the original is destroyed when measured.
+  </p>
+
+  <h2>BB84 Protocol</h2>
+  <p>
+    The BB84 protocol is the first quantum key distribution (QKD) scheme. It lets two parties (traditionally Alice and Bob) generate a shared secret key over an insecure quantum channel.
+  </p>
+  <p>
+    Alice sends qubits in one of two bases (e.g., rectilinear or diagonal), chosen randomly. Bob measures them using a random basis. They later publicly compare which bases they used, discarding mismatches.
+    The remaining bits — when bases matched — form a <strong>raw key</strong>.
+  </p>
+  <p>
+    BB84’s security relies on the <em>no-cloning theorem</em> and the fact that any eavesdropping (by Eve) introduces detectable errors.
+  </p>
+
+  <h2>Shor’s Algorithm</h2>
+  <p>
+    Shor’s algorithm efficiently factors large integers, which threatens classical cryptographic schemes like RSA that rely on the hardness of factorization.
+    It uses the quantum Fourier transform (QFT) to find the <em>period</em> of a modular exponential function, which reveals a factor of the number.
+  </p>
+  <p>
+    Classically, factoring a number N takes sub-exponential time. Shor’s algorithm reduces it to polynomial time: O((log N)^3), which is exponentially faster.
+    Its impact is foundational in post-quantum cryptography research and the push for quantum-safe encryption.
+  </p>
+</div>
+
+
+    </div>
+  </div>
+
+  <script>
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+      document.getElementById(id).style.display = 'block';
+    }
+  </script>
+</body>
+</html>

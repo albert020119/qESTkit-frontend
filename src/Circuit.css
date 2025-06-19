@@ -24,13 +24,13 @@ body.dark {
 body {
   margin: 0;
   font-family: sans-serif;
-  background: var(--bg);
+  background: transparent !important; /* was var(--bg) */
   color: var(--fg);
 }
 
 .container {
   padding: 24px;
-  background-color: var(--bg);
+  background-color: transparent !important; /* was var(--bg) */
   min-height: 100vh;
   color: var(--fg);
 }
