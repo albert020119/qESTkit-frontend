@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import "./Circuit.css";
+import ThemeToggle from "./ThemeToggle";
+import { useTheme } from "./theme/ThemeContext";
 
 export default function QuantumSimApp() {
+  const { darkMode } = useTheme(); 
   const [code, setCode] = useState("// Example: H 0\nH 0\nCNOT 0 1\n");
   const [results, setResults] = useState(null);
   const [isNoisy, setIsNoisy] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
 
   const parseCodeToGates = (rawCode) => {
     const lines = rawCode.split("\n");
@@ -60,7 +62,6 @@ export default function QuantumSimApp() {
     const filtered = allQubits.filter((q) => Number.isInteger(q) && q >= 0);
     const numQubits = filtered.length ? Math.max(...filtered) + 1 : 1;
 
-    // Build timeline: alternate gate and line columns
     const timeline = [];
 
     gates.forEach((gate, i) => {
@@ -70,7 +71,6 @@ export default function QuantumSimApp() {
       });
       timeline.push(gateCol);
 
-      // Add connector column (line) after each gate column except the last
       if (i < gates.length - 1) {
         const lineCol = Array(numQubits).fill(null);
         for (let q = 0; q < numQubits; q++) {
@@ -85,7 +85,7 @@ export default function QuantumSimApp() {
     });
 
     return (
-      <div className={`circuit ${darkMode ? "dark" : ""}`}>
+      <div className="circuit">
         {Array.from({ length: numQubits }).map((_, qIdx) => (
           <div className="circuit-row" key={`qrow-${qIdx}`}>
             <span className="qubit-label">q[{qIdx}]</span>
@@ -145,7 +145,7 @@ export default function QuantumSimApp() {
   };
 
   return (
-    <div className={`container ${darkMode ? "dark" : ""}`}>
+    <div className="container">
       <h1>Quantum Circuit Simulator</h1>
 
       <div className="panel">
@@ -163,7 +163,7 @@ export default function QuantumSimApp() {
           >
             {isNoisy ? "Noisy Mode: ON" : "Noisy Mode: OFF"}
           </button>
-          <button onClick={() => setDarkMode(!darkMode)}>Toggle Dark Mode</button>
+          <ThemeToggle />
         </div>
       </div>
 
