@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./Circuit.css";
+import NET from "vanta/dist/vanta.net.min";
+import * as THREE from "three";
 
 // Imports from both branches, deduped and ordered
 import ThemeToggle from "./ThemeToggle";
@@ -82,10 +84,56 @@ function getQSphereVectors(results, numQubits) {
   return vectors;
 }
 
+function VantaBackground() {
+  const vantaRef = useRef(null);
+  const vantaEffect = useRef(null);
+
+  useEffect(() => {
+    vantaEffect.current = NET({
+      el: vantaRef.current,
+      THREE,
+      mouseControls: true,
+      touchControls: true,
+      minHeight: 200.00,
+      minWidth: 200.00,
+      scale: 1.0,
+      scaleMobile: 1.0,
+      color: 0x1e293b,
+      backgroundColor: 0x270485
+    });
+    return () => {
+      if (vantaEffect.current) {
+        vantaEffect.current.destroy();
+        vantaEffect.current = null;
+      }
+    };
+  }, []);
+
+  return (
+    <div style={{ position: "fixed", width: "100vw", height: "100vh", top: 0, left: 0, zIndex: -1, pointerEvents: "none" }}>
+      <div ref={vantaRef} style={{ width: "100%", height: "100%" }} />
+      {/* Overlay for opacity */}
+      <div
+        style={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          top: 0,
+          left: 0,
+          background: "#1e293b", // or transparent
+          opacity: 0.96,       // adjust this value for more/less opacity
+          pointerEvents: "none"
+        }}
+      />
+    </div>
+  );
+}
+
 // ========== Main Component ==========
 export default function QuantumSimApp() {
   // Theme context
   const { darkMode } = useTheme();
+
   // State
   const [code, setCode] = useState("H 0\nCNOT 0 1\n");
   const [results, setResults] = useState(null);
@@ -322,6 +370,7 @@ export default function QuantumSimApp() {
     : [];
   const allBasisVectors = results ? getAllBasisVectors(results, numQubitsForBloch) : [];
   const qSphereVectors = results ? getQSphereVectors(results, numQubitsForBloch) : [];
+  
   // Reports functions
   const handleCreateReport = async (code, message) => {
     try {
@@ -345,155 +394,159 @@ export default function QuantumSimApp() {
 
   // ===== Render =====
   return (
-    <div className={`container ${darkMode ? "dark" : ""}`}>      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px", gap: "12px" }}>
-        {/* Reports Menu */}
-        <ReportsMenu 
-          onCreateReport={() => setShowCreateReport(true)}
-          onViewReports={handleViewReports}
+    <>
+      {darkMode && <VantaBackground />}
+      <div className={`container ${darkMode ? "dark" : ""}`}>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px", gap: "12px" }}>
+          {/* Reports Menu */}
+          <ReportsMenu 
+            onCreateReport={() => setShowCreateReport(true)}
+            onViewReports={handleViewReports}
+          />
+
+          <a
+            href="/documentation.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              backgroundColor: "#3b82f6",
+              color: "white",
+              padding: "8px 16px",
+              borderRadius: "6px",
+              textDecoration: "none",
+              fontWeight: "bold"
+            }}
+          >
+            Documentation
+          </a>
+        </div>
+
+        {/* Create Report Modal */}
+        <CreateReportModal 
+          isOpen={showCreateReport}
+          onClose={() => setShowCreateReport(false)}
+          circuitCode={code}
+          onSubmit={handleCreateReport}
         />
 
-        <a
-          href="/documentation.html"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            backgroundColor: "#3b82f6",
-            color: "white",
-            padding: "8px 16px",
-            borderRadius: "6px",
-            textDecoration: "none",
-            fontWeight: "bold"
-          }}
-        >
-          Documentation
-        </a>
-      </div>
+        {/* View Reports Modal */}
+        <ViewReportsModal 
+          isOpen={showViewReports}
+          onClose={() => setShowViewReports(false)}
+          reports={reports}
+        />
 
-      {/* Create Report Modal */}
-      <CreateReportModal 
-        isOpen={showCreateReport}
-        onClose={() => setShowCreateReport(false)}
-        circuitCode={code}
-        onSubmit={handleCreateReport}
-      />
-
-      {/* View Reports Modal */}
-      <ViewReportsModal 
-        isOpen={showViewReports}
-        onClose={() => setShowViewReports(false)}
-        reports={reports}
-      />
-
-      <h1>Quantum Circuit Simulator</h1>
-      <div className="layout">
-        <div className="toolbox-container">
-          <GateToolbox onGateDragStart={handleDragStart} />
-        </div>
-        <div className="main-content">
-          <div className="panel">
-            <h2>Drag & Drop Circuit Editor</h2>
-            <CircuitBoard
-              circuit={circuit}
-              numQubits={numQubits}
-              onAddQubit={handleAddQubit}
-              onRemoveQubit={handleRemoveQubit}
-              onDragOver={handleDragOver}
-              onDrop={onDrop}
-              onCellClick={(params) => {
-                if (params.cancel) {
-                  setGatePrompt(null);
-                  return;
-                }
-                if (params.toggleRemove) {
-                  toggleRemoveMode();
-                  return;
-                }
-                handleCellClick(params);
-              }}
-              gatePrompt={gatePrompt}
-              removeModeActive={removeModeActive}
-              darkMode={darkMode}
-            />
-            <div className="buttons">
-              <button onClick={handleSimulate}>Simulate Circuit</button>
-              <button
-                onClick={() => setIsNoisy(!isNoisy)}
-                className={isNoisy ? "noisy" : ""}
-              >
-                {isNoisy ? "Noisy Mode: ON" : "Noisy Mode: OFF"}
-              </button>
-              <ThemeToggle />
-            </div>
+        <h1>Quantum Circuit Simulator</h1>
+        <div className="layout">
+          <div className="toolbox-container">
+            <GateToolbox onGateDragStart={handleDragStart} />
           </div>
-
-          <div className="panel">
-            <h2>Quantum Circuit Code</h2>
-            <textarea
-              rows={6}
-              value={code}
-              onChange={(e) => {
-                const newCode = e.target.value;
-                setIsManualEdit(true);
-                setCode(newCode);
-                if (newCode.trim()) {
-                  try {
-                    const parsedGates = parseCodeToGates(newCode);
-                    if (parsedGates.length > 0) {
-                      const processedGates = parsedGates.map((gate, index) => ({
-                        ...gate,
-                        column: index
-                      }));
-                      setCircuit(processedGates);
-                    }
-                  } catch (err) {
-                    // ignore parse errors
-                  }
-                }
-              }}
-            />
-            <small>You can also directly edit the code above</small>
-          </div>
-
-          {results && (
+          <div className="main-content">
             <div className="panel">
-              <h3>Simulation Results</h3>
-              {Object.entries(results).map(([state, count]) => (
-                <div key={state}>
-                  {state}: {count}
-                </div>
-              ))}
+              <h2>Drag & Drop Circuit Editor</h2>
+              <CircuitBoard
+                circuit={circuit}
+                numQubits={numQubits}
+                onAddQubit={handleAddQubit}
+                onRemoveQubit={handleRemoveQubit}
+                onDragOver={handleDragOver}
+                onDrop={onDrop}
+                onCellClick={(params) => {
+                  if (params.cancel) {
+                    setGatePrompt(null);
+                    return;
+                  }
+                  if (params.toggleRemove) {
+                    toggleRemoveMode();
+                    return;
+                  }
+                  handleCellClick(params);
+                }}
+                gatePrompt={gatePrompt}
+                removeModeActive={removeModeActive}
+                darkMode={darkMode}
+              />
+              <div className="buttons">
+                <button onClick={handleSimulate}>Simulate Circuit</button>
+                <button
+                  onClick={() => setIsNoisy(!isNoisy)}
+                  className={isNoisy ? "noisy" : ""}
+                >
+                  {isNoisy ? "Noisy Mode: ON" : "Noisy Mode: OFF"}
+                </button>
+                <ThemeToggle />
+              </div>
             </div>
-          )}
 
-          <div>
-            <h2>Bloch Sphere (All Qubits)</h2>
-            <BlochSphere basisVectors={qSphereVectors} />
+            <div className="panel">
+              <h2>Quantum Circuit Code</h2>
+              <textarea
+                rows={6}
+                value={code}
+                onChange={(e) => {
+                  const newCode = e.target.value;
+                  setIsManualEdit(true);
+                  setCode(newCode);
+                  if (newCode.trim()) {
+                    try {
+                      const parsedGates = parseCodeToGates(newCode);
+                      if (parsedGates.length > 0) {
+                        const processedGates = parsedGates.map((gate, index) => ({
+                          ...gate,
+                          column: index
+                        }));
+                        setCircuit(processedGates);
+                      }
+                    } catch (err) {
+                      // ignore parse errors
+                    }
+                  }
+                }}
+              />
+              <small>You can also directly edit the code above</small>
+            </div>
+
             {results && (
-              <div style={{ color: "#fff", marginTop: 8 }}>
-                {allBlochAngles.map((_, i) => (
-                  <span key={i} style={{ marginRight: 16, color: "#fff" }}>
-                    <span style={{
-                      display: "inline-block",
-                      width: 12,
-                      height: 12,
-                      background: [
-                        "#ffff00", "#ff00ff", "#00ffff", "#ff8800", "#00ff88", "#8888ff", "#fff"
-                      ][i % 7],
-                      borderRadius: "50%",
-                      marginRight: 4,
-                      verticalAlign: "middle"
-                    }}></span>
-                    Qubit {i}
-                  </span>
+              <div className="panel">
+                <h3>Simulation Results</h3>
+                {Object.entries(results).map(([state, count]) => (
+                  <div key={state}>
+                    {state}: {count}
+                  </div>
                 ))}
               </div>
             )}
-          </div>
 
-          {/* Chatbot added at the end of the main content */}
-          <Chatbot circuitText={code} />
+            <div>
+              <h2>Bloch Sphere (All Qubits)</h2>
+              <BlochSphere basisVectors={qSphereVectors} />
+              {results && (
+                <div style={{ color: "#fff", marginTop: 8 }}>
+                  {allBlochAngles.map((_, i) => (
+                    <span key={i} style={{ marginRight: 16, color: "#fff" }}>
+                      <span style={{
+                        display: "inline-block",
+                        width: 12,
+                        height: 12,
+                        background: [
+                          "#ffff00", "#ff00ff", "#00ffff", "#ff8800", "#00ff88", "#8888ff", "#fff"
+                        ][i % 7],
+                        borderRadius: "50%",
+                        marginRight: 4,
+                        verticalAlign: "middle"
+                      }}></span>
+                      Qubit {i}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Chatbot added at the end of the main content */}
+            <Chatbot circuitText={code} />
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
