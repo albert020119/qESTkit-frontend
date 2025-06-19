@@ -259,20 +259,35 @@ button + button {
 .chatbot-messages {
   flex: 1;
   padding: 12px;
-  max-height: 260px;
+  min-height: 240px;
+  max-height: 300px;
   overflow-y: auto;
   background: #222;
+  scroll-behavior: smooth;
+}
+
+.msg {
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  max-width: 85%;
+  word-wrap: break-word;
 }
 
 .msg.bot {
   text-align: left;
-  margin-bottom: 8px;
+  background-color: #334155;
   color: #fff;
+  align-self: flex-start;
+  border-bottom-left-radius: 2px;
 }
+
 .msg.user {
   text-align: right;
-  color: #0ff;
-  margin-bottom: 8px;
+  background-color: #0d47a1;
+  color: #fff;
+  align-self: flex-end;
+  border-bottom-right-radius: 2px;
 }
 
 .chatbot-input {
@@ -280,26 +295,72 @@ button + button {
   border-top: 1px solid #334155;
   background: #1e293b;
   border-radius: 0 0 16px 16px;
+  align-items: center;
+  padding: 8px 12px;
 }
-.chatbot-input input {
+
+.chatbot-textarea {
   flex: 1;
-  border: none;
-  background: transparent;
-  color: #fff;
-  padding: 12px;
-  font-size: 1rem;
+  border: none !important;
+  background: transparent !important;
+  color: #fff !important;
+  padding: 10px !important;
+  font-size: 1rem !important;
+  font-family: inherit !important;
+  resize: none !important;
+  min-height: 24px !important;
+  margin: 0 !important;
 }
+
 .chatbot-input button {
   background: #0ff;
   border: none;
   color: #111;
-  padding: 12px 20px;
+  padding: 8px 16px;
   cursor: pointer;
-  border-radius: 0 0 16px 0;
+  border-radius: 6px;
   font-weight: bold;
   font-size: 1rem;
   transition: background 0.2s;
 }
+
 .chatbot-input button:hover {
   background: #06b6d4;
+}
+
+.attach-code-btn {
+  background: #334155 !important;
+  color: #fff !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}
+
+.attach-code-btn:hover {
+  background: #475569 !important;
+}
+
+.plus-sign {
+  font-size: 20px;
+  font-weight: normal;
+}
+
+.message-line {
+  line-height: 1.4;
+  margin: 2px 0;
+}
+
+code, pre {
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9em;
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre-wrap;
 }

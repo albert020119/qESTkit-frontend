@@ -63,12 +63,11 @@ export default function Chatbot({ circuitText }) {
             >
               ×
             </button>
-          </div>
-          <div className="chatbot-messages">
+          </div>          <div className="chatbot-messages">
             {messages.map((msg, idx) => (
               <div key={idx} className={`msg ${msg.from}`}>
                 {msg.text.split("\n").map((line, lineIdx) => (
-                  <div key={lineIdx}>{line}</div>
+                  <div key={lineIdx} className="message-line">{line}</div>
                 ))}
               </div>
             ))}
@@ -81,19 +80,16 @@ export default function Chatbot({ circuitText }) {
               placeholder="Type your message..."
               rows={1}
               className="chatbot-textarea"
-            />
-            <button
+            />            <button
               className="attach-code-btn"
               onClick={handleAttachCode}
-              title="Attach code"
-              style={{marginLeft: 6}}
+              title="Attach circuit code"
             >
               <span className="plus-sign">+</span>
             </button>
             <button
               className="send-btn"
               onClick={sendMessage}
-              style={{marginLeft: 8}}
             >Send</button>
           </div>
         </div>

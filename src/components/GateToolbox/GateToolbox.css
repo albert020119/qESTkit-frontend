@@ -3,7 +3,7 @@
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 24px;
-  width: 250px;
+  width: 300px;
 }
 
 .gate-list {
@@ -18,31 +18,46 @@
   height: 60px;
   background: var(--gate-bg);
   color: white;
-  font-family: monospace;
-  font-size: 14px;
-  border-radius: 8px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: grab;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all 0.2s ease-in-out;
   position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  letter-spacing: 0.5px;
 }
 
 .gate-with-param {
-  background: linear-gradient(to bottom right, #6366f1, #4f46e5);
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .param-indicator {
-  font-size: 10px;
+  font-size: 11px;
   margin-top: 4px;
-  opacity: 0.8;
+  font-weight: normal;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 1px 6px;
+  letter-spacing: 0;
 }
 
 .gate-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.gate-item:active {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 4px rgba(0, 0, 0, 0.2);
 }
 
 .toolbox-instructions {
@@ -50,9 +65,181 @@
   color: var(--line);
   text-align: center;
   margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+/* Bloch Sphere styles */
+.bloch-sphere-container {
+  margin-top: 24px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+
+.bloch-sphere-preview {
+  height: 160px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #222;
+  border: 2px solid transparent;
+}
+
+.bloch-sphere-preview:hover {
+  border-color: #3b82f6;
+  transform: scale(1.02);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.bloch-sphere-hint {
+  text-align: center;
+  font-size: 12px;
+  color: var(--line);
+  margin-top: 8px;
+}
+
+/* Bloch Sphere Modal styles */
+.bloch-sphere-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.bloch-sphere-modal {
+  background: var(--panel);
+  border-radius: 12px;
+  width: 80%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.5);
+  animation: scaleIn 0.3s ease;
+}
+
+.bloch-sphere-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.bloch-sphere-modal-content {
+  height: 600px;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--fg);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  padding: 0;
+  transition: background-color 0.2s;
+}
+
+.close-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 /* Dark mode styles */
 .dark .gate-toolbox {
   background-color: #1e293b;
+}
+
+.dark .close-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Gate type specific styling */
+.gate-single-qubit {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.gate-multi-qubit {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.gate-measurement {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+/* Improved gate list layout */
+.gate-category {
+  margin-bottom: 16px;
+}
+
+.gate-category-title {
+  font-size: 14px;
+  color: var(--fg);
+  margin-bottom: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  padding: 5px 8px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  border-left: 4px solid #3b82f6;
+}
+
+/* Use different colors for different gate categories */
+.gate-category:nth-child(2) .gate-category-title {
+  border-left-color: #8b5cf6; /* Purple for phase gates */
+}
+
+.gate-category:nth-child(3) .gate-category-title {
+  border-left-color: #10b981; /* Green for rotation gates */
+}
+
+.gate-category:nth-child(4) .gate-category-title {
+  border-left-color: #f59e0b; /* Amber for multi-qubit gates */
+}
+
+/* Tooltips for gates */
+.gate-item .gate-tooltip {
+  visibility: hidden;
+  width: 120px;
+  background-color: rgba(15, 23, 42, 0.9);
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 10;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -60px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.gate-item:hover .gate-tooltip {
+  visibility: visible;
+  opacity: 1;
 }
