@@ -29,17 +29,17 @@ export default function ReportsMenu({ onCreateReport, onViewReports }) {
   };
 
   return (
-    <div className="reports-menu" style={{ position: "relative", display: "inline-block" }}>
-      <button
+    <div className="reports-menu" style={{ position: "relative", display: "inline-block" }}>      <button
         onClick={() => setShowMenu(!showMenu)}
         style={{
           backgroundColor: "#3b82f6",
           color: "white",
-          padding: "8px 16px",
+          padding: "10px 20px",
           borderRadius: "6px",
           border: "none",
           fontWeight: "bold",
-          cursor: "pointer"
+          cursor: "pointer",
+          fontSize: "16px"
         }}
       >
         Reports ▼
