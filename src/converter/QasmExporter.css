@@ -1,0 +1,132 @@
+.qasm-exporter-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.qasm-exporter-content {
+  background-color: #fff;
+  border-radius: 6px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.dark .qasm-exporter-content {
+  background-color: #1e293b;
+  color: #f0f0f0;
+  border: 1px solid #34495e;
+}
+
+.qasm-exporter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e1e1e1;
+}
+
+.dark .qasm-exporter-header {
+  border-bottom: 1px solid #34495e;
+}
+
+.qasm-exporter-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.qasm-close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  color: #777;
+}
+
+.dark .qasm-close-btn {
+  color: #f0f0f0;
+}
+
+.qasm-exporter-body {
+  padding: 20px;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.qasm-code {
+  background-color: #f7f7f7;
+  padding: 15px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.dark .qasm-code {
+  background-color: #2d3748;
+  color: #f0f0f0;
+  border: 1px solid #34495e;
+}
+
+.qasm-exporter-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #e1e1e1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.dark .qasm-exporter-footer {
+  border-top: 1px solid #34495e;
+}
+
+.qasm-copy-btn,
+.qasm-close-btn-footer {
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.qasm-copy-btn {
+  background-color: #3b82f6;
+  color: #fff;
+  border: none;
+}
+
+.qasm-copy-btn:hover {
+  background-color: #2563eb;
+}
+
+.qasm-close-btn-footer {
+  background-color: #e5e7eb;
+  border: 1px solid #ccc;
+  color: #333;
+}
+
+.dark .qasm-close-btn-footer {
+  background-color: #4a5568;
+  border: 1px solid #2d3748;
+  color: #f0f0f0;
+}
+
+.qasm-close-btn-footer:hover {
+  background-color: #d1d5db;
+}
+
+.dark .qasm-close-btn-footer:hover {
+  background-color: #374151;
+}

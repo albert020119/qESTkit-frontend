@@ -8,6 +8,7 @@ import ThemeToggle from "./ThemeToggle";
 import { useTheme } from "./theme/ThemeContext";
 import GateToolbox from "./components/GateToolbox/GateToolbox";
 import CircuitBoard from "./components/Circuit/CircuitBoard";
+import { QasmExporter } from "./converter";
 import "./components/Circuit/CircuitBoard.css";
 import "./components/Circuit/CircuitBoardExtras.css";
 import "./components/GateToolbox/GateToolbox.css";
@@ -143,6 +144,9 @@ export default function QuantumSimApp() {
   const [showCreateReport, setShowCreateReport] = useState(false);
   const [showViewReports, setShowViewReports] = useState(false);
   const [reports, setReports] = useState([]);
+  
+  // QASM Export state
+  const [showQasmExport, setShowQasmExport] = useState(false);
 
   // DnD/circuit state:
   const [numQubits, setNumQubits] = useState(2);
@@ -300,6 +304,10 @@ export default function QuantumSimApp() {
   const toggleRemoveMode = () => {
     setRemoveModeActive(prev => !prev);
   };
+  
+  const handleExportToQasm = () => {
+    setShowQasmExport(true);
+  };
 
   const { handleDragStart, handleDragOver, handleDrop: onDrop } = useDragDrop((gate, position) => {
     handleDrop(gate, position);
@@ -432,6 +440,14 @@ export default function QuantumSimApp() {
           onClose={() => setShowViewReports(false)}
           reports={reports}
         />
+        
+        {/* QASM Export Modal */}
+        <QasmExporter
+          isOpen={showQasmExport}
+          onClose={() => setShowQasmExport(false)}
+          circuit={circuit}
+          numQubits={numQubits}
+        />
 
         <h1>Quantum Circuit Simulator</h1>
         <div className="layout">
@@ -451,6 +467,7 @@ export default function QuantumSimApp() {
                 onRemoveQubit={handleRemoveQubit}
                 onDragOver={handleDragOver}
                 onDrop={onDrop}
+                onExportQasm={handleExportToQasm}
                 onCellClick={(params) => {
                   if (params.cancel) {
                     setGatePrompt(null);
