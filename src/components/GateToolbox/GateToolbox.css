@@ -3,7 +3,7 @@
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 24px;
-  width: 250px;
+  width: 300px;
 }
 
 .gate-list {
@@ -50,9 +50,112 @@
   color: var(--line);
   text-align: center;
   margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+/* Bloch Sphere styles */
+.bloch-sphere-container {
+  margin-top: 24px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+
+.bloch-sphere-preview {
+  height: 160px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #222;
+  border: 2px solid transparent;
+}
+
+.bloch-sphere-preview:hover {
+  border-color: #3b82f6;
+  transform: scale(1.02);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.bloch-sphere-hint {
+  text-align: center;
+  font-size: 12px;
+  color: var(--line);
+  margin-top: 8px;
+}
+
+/* Bloch Sphere Modal styles */
+.bloch-sphere-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.bloch-sphere-modal {
+  background: var(--panel);
+  border-radius: 12px;
+  width: 80%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.5);
+  animation: scaleIn 0.3s ease;
+}
+
+.bloch-sphere-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.bloch-sphere-modal-content {
+  height: 600px;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--fg);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  padding: 0;
+  transition: background-color 0.2s;
+}
+
+.close-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 /* Dark mode styles */
 .dark .gate-toolbox {
   background-color: #1e293b;
+}
+
+.dark .close-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }

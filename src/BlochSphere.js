@@ -20,18 +20,23 @@ function makeTextSprite(message, color = "#fff") {
   return sprite;
 }
 
-export default function BlochSphere({ basisVectors = [] }) {
+export default function BlochSphere({ basisVectors = [], size = 'full' }) {
   const containerRef = useRef(null);
 
   useEffect(() => {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
-      60,
+      size === 'compact' ? 50 : 60,
       containerRef.current.clientWidth / containerRef.current.clientHeight,
       0.1,
       1000
     );
-    camera.position.set(0, -3, 0);
+    // Adjust camera position for compact view to better center the sphere
+    if (size === 'compact') {
+      camera.position.set(0, -2.2, 0);
+    } else {
+      camera.position.set(0, -3, 0);
+    }
     camera.up.set(0, 0, 1);
     camera.lookAt(0, 0, 0);
 
@@ -189,15 +194,15 @@ export default function BlochSphere({ basisVectors = [] }) {
       }
     };
   }, [basisVectors]);
-
   return (
     <div
       ref={containerRef}
       style={{
         width: '100%',
-        height: '400px',
+        height: size === 'compact' ? '200px' : '400px',
         background: '#222',
         position: 'relative',
+        borderRadius: '8px',
       }}
     />
   );
