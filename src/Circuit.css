@@ -1,10 +1,25 @@
 :root {
+  --bg: #f9fafb;
+  --fg: #0f172a;
+  --panel: #ffffff;
+  --line: #94a3b8;
+  --gate-bg: linear-gradient(to bottom right, #3b82f6, #2563eb);
+  --textarea-bg: white;
+  --textarea-fg: #0f172a;
+  --textarea-border: #cbd5e1;
+}
+
+body.dark {
   --bg: #0f172a;
   --fg: #f1f5f9;
   --panel: #1e293b;
   --line: #94a3b8;
   --gate-bg: linear-gradient(to bottom right, #3b82f6, #2563eb);
+  --textarea-bg: #1e293b;
+  --textarea-fg: white;
+  --textarea-border: #475569;
 }
+
 
 body {
   margin: 0;
@@ -20,6 +35,19 @@ body {
   color: var(--fg);
 }
 
+.layout {
+  display: flex;
+  gap: 24px;
+}
+
+.toolbox-container {
+  flex: 0 0 250px;
+}
+
+.main-content {
+  flex: 1;
+}
+
 .panel {
   background-color: var(--panel);
   border-radius: 12px;
@@ -31,13 +59,15 @@ body {
 textarea {
   width: 100%;
   border-radius: 8px;
-  border: 1px solid #475569;
+  border: 1px solid var(--textarea-border);
   padding: 12px;
   font-family: monospace;
-  background: #1e293b;
-  color: white;
+  background: var(--textarea-bg);
+  color: var(--textarea-fg);
   resize: vertical;
 }
+
+
 
 button {
   padding: 8px 16px;

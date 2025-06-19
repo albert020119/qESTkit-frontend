@@ -1,15 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./Circuit.css";
-import BlochSphere from "./BlochSphere"; 
+import BlochSphere from "./BlochSphere";
+import GateToolbox from "./components/GateToolbox/GateToolbox";
+import CircuitBoard from "./components/Circuit/CircuitBoard";
+import "./components/Circuit/CircuitBoard.css";
+import "./components/Circuit/CircuitBoardExtras.css";
+import "./components/GateToolbox/GateToolbox.css";
+import { useDragDrop } from "./hooks/useDragDrop";
+import ThemeToggle from "./ThemeToggle";
+import { useTheme } from "./theme/ThemeContext";
 
-// Helper to compute theta/phi for any qubit from multi-qubit results
+// ========= Helper functions from bloch-sphere branch =========
 function getBlochAnglesFromResults(results, qubitIdx = 0) {
-  console.log(results)
   if (!results) return { theta: Math.PI / 4, phi: 0 };
   let shots0 = 0, shots1 = 0, total = 0;
   for (const [state, count] of Object.entries(results)) {
-    // state is a bitstring, e.g. "01" (q[0]=0, q[1]=1)
-    const bit = state[state.length - 1 - qubitIdx]; // rightmost is q[0]
+    const bit = state[state.length - 1 - qubitIdx];
     if (bit === "0") shots0 += count;
     else if (bit === "1") shots1 += count;
     total += count;
@@ -20,25 +26,6 @@ function getBlochAnglesFromResults(results, qubitIdx = 0) {
   return { theta, phi: 0 };
 }
 
-// Helper to compute Bloch vector (x, y, z) from simulation results
-function getBlochVectorFromResults(results, qubitIdx = 0) {
-  if (!results) return { x: 0, y: 0, z: 0 };
-  let shots0 = 0, shots1 = 0, total = 0;
-  for (const [state, count] of Object.entries(results)) {
-    const bit = state[state.length - 1 - qubitIdx];
-    if (bit === "0") shots0 += count;
-    else if (bit === "1") shots1 += count;
-    total += count;
-  }
-  if (total === 0) return { x: 0, y: 0, z: 0 };
-  const p0 = shots0 / total;
-  const p1 = shots1 / total;
-  // Only Z component can be inferred from measurement
-  const z = p0 - p1;
-  return { x: 0, y: 0, z };
-}
-
-// Returns: Array of {x, y, z, prob, qubit, value} for all basis states for all qubits
 function getAllBasisVectors(results, numQubits) {
   if (!results) return [];
   let total = 0;
@@ -48,15 +35,9 @@ function getAllBasisVectors(results, numQubits) {
     for (const [state, count] of Object.entries(results)) {
       const bit = state[state.length - 1 - q];
       const prob = count / total;
-      // |0> = +Z, |1> = -Z
       const z = bit === "0" ? 1 : -1;
       vectors.push({
-        x: 0,
-        y: 0,
-        z,
-        prob,
-        qubit: q,
-        value: bit,
+        x: 0, y: 0, z, prob, qubit: q, value: bit,
       });
     }
   }
@@ -69,7 +50,6 @@ function getQSphereVectors(results, numQubits) {
   for (const count of Object.values(results)) total += count;
   const vectors = [];
   for (const [state, count] of Object.entries(results)) {
-    // Remove '|' and '>' if present
     const cleanState = state.replace(/\|/g, '').replace(/\>/g, '');
     const padded = cleanState.padStart(numQubits, "0");
     const bits = padded.split("").map(Number);
@@ -77,7 +57,6 @@ function getQSphereVectors(results, numQubits) {
 
     let theta, phi;
     if (numQubits === 2) {
-      // Custom mapping for 2 qubits: |01> = +Y, |10> = –Y
       if (padded === "00")      { theta = 0;        phi = 0; }
       else if (padded === "01") { theta = Math.PI/2; phi = Math.PI/2; }
       else if (padded === "10") { theta = Math.PI/2; phi = 3*Math.PI/2; }
@@ -99,41 +78,206 @@ function getQSphereVectors(results, numQubits) {
   return vectors;
 }
 
+// ========== Main Component ==========
 export default function QuantumSimApp() {
+  // State
   const [code, setCode] = useState("H 0\nCNOT 0 1\n");
   const [results, setResults] = useState(null);
   const [isNoisy, setIsNoisy] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [selectedQubit, setSelectedQubit] = useState(0);
 
+  // D&D/circuit state:
+  const [numQubits, setNumQubits] = useState(2);
+  const [circuit, setCircuit] = useState([]);
+  const [gatePrompt, setGatePrompt] = useState(null);
+  const [removeModeActive, setRemoveModeActive] = useState(false);
+  const [isManualEdit, setIsManualEdit] = useState(false);
+
+  // ======= Parsing and circuit helpers =======
   const parseCodeToGates = (rawCode) => {
+    if (!rawCode || typeof rawCode !== 'string') return [];
     const lines = rawCode.split("\n");
     const gates = [];
+    const paramGates = ['Ph', 'Rx', 'Ry', 'Rz'];
     for (const line of lines) {
-      const parts = line.trim().split(" ");
-      if (parts.length < 2) continue;
+      const trimmedLine = line.trim();
+      if (!trimmedLine || trimmedLine.startsWith("//")) continue;
+      const parts = trimmedLine.split(" ").filter(part => part.trim() !== "");
+      if (parts.length < 1) continue;
       const name = parts[0].toUpperCase();
-      const qubits = parts.slice(1).map(Number).filter((q) => Number.isInteger(q) && q >= 0);
-      if (qubits.length > 0) gates.push({ name, qubits });
+      if (!name) continue;
+      if (paramGates.includes(name)) {
+        if (parts.length < 3) continue;
+        const param = parseFloat(parts[1]);
+        if (isNaN(param)) continue;
+        const qubits = parts.slice(2).map(Number).filter((q) => Number.isInteger(q) && q >= 0);
+        if (qubits.length > 0) {
+          gates.push({ name, qubits, param, hasParam: true });
+        }
+      } else {
+        if (parts.length < 2) continue;
+        const qubits = parts.slice(1).map(Number).filter((q) => Number.isInteger(q) && q >= 0);
+        if (qubits.length > 0) {
+          gates.push({ name, qubits });
+        }
+      }
     }
     return gates;
   };
 
+  const generateCodeFromCircuit = () => {
+    let generatedCode = "";
+    circuit.forEach(gate => {
+      if (gate.hasParam && gate.param !== undefined) {
+        generatedCode += `${gate.name} ${gate.param} ${gate.qubits.join(" ")}\n`;
+      } else {
+        generatedCode += `${gate.name} ${gate.qubits.join(" ")}\n`;
+      }
+    });
+    return generatedCode;
+  };
+
+  // ======= Drag-and-drop logic (from master) =======
+  useEffect(() => {
+    const parsedGates = parseCodeToGates(code);
+    const processedGates = parsedGates.map((gate, index) => ({
+      ...gate,
+      column: index
+    }));
+    setCircuit(processedGates);
+  }, []);
+
+  useEffect(() => {
+    if (circuit.length > 0 && !isManualEdit) {
+      setCode(generateCodeFromCircuit());
+    }
+  }, [circuit]);
+
+  const handleDrop = (gate, position) => {
+    const { qubit, column } = position;
+    if (gate.hasParam) {
+      const param = prompt(`Enter ${gate.paramName || 'parameter'} value for ${gate.name} gate:`, '0');
+      if (param === null) return;
+      const paramValue = parseFloat(param);
+      if (isNaN(paramValue)) {
+        alert("Please enter a valid number for the parameter");
+        return;
+      }
+      const newGate = {
+        ...gate,
+        param: paramValue,
+        qubits: [qubit],
+        column
+      };
+      addGateToCircuit(newGate);
+      return;
+    }
+    if ((gate.controlQubits && gate.targetQubits) || gate.name === 'CNOT' || gate.name === 'CZ') {
+      setGatePrompt({
+        gate,
+        position,
+        step: 'select-control'
+      });
+      return;
+    }
+    const newGate = {
+      ...gate,
+      qubits: [qubit],
+      column
+    };
+    addGateToCircuit(newGate);
+  };
+
+  const addGateToCircuit = (newGate) => {
+    setCircuit(prev => {
+      const existingGateIndex = prev.findIndex(g =>
+        g.column === newGate.column && g.qubits.some(q => newGate.qubits.includes(q))
+      );
+      if (existingGateIndex !== -1) {
+        const newCircuit = [...prev];
+        newCircuit[existingGateIndex] = newGate;
+        return newCircuit;
+      } else {
+        return [...prev, newGate];
+      }
+    });
+  };
+
+  const handleCellClick = (position) => {
+    const { qubit, column } = position;
+    if (gatePrompt) {
+      if (gatePrompt.step === 'select-control') {
+        setGatePrompt({
+          ...gatePrompt,
+          controlQubit: qubit,
+          step: 'select-target'
+        });
+      } else if (gatePrompt.step === 'select-target') {
+        if (qubit === gatePrompt.controlQubit) {
+          alert("Control and target qubits must be different");
+          return;
+        }
+        const newGate = {
+          ...gatePrompt.gate,
+          qubits: [gatePrompt.controlQubit, qubit],
+          column: gatePrompt.position.column
+        };
+        addGateToCircuit(newGate);
+        setGatePrompt(null);
+      }
+    } else if (removeModeActive) {
+      removeGateAtPosition(position);
+    }
+  };
+
+  const removeGateAtPosition = (position) => {
+    const { qubit, column } = position;
+    setCircuit(prev => {
+      return prev.filter(gate => !(gate.column === column && gate.qubits.includes(qubit)));
+    });
+  };
+
+  const toggleRemoveMode = () => {
+    setRemoveModeActive(prev => !prev);
+  };
+
+  const { handleDragStart, handleDragOver, handleDrop: onDrop } = useDragDrop((gate, position) => {
+    handleDrop(gate, position);
+  });
+
+  const handleAddQubit = () => {
+    setNumQubits(prev => prev + 1);
+  };
+
+  const handleRemoveQubit = () => {
+    if (numQubits > 1) {
+      setNumQubits(prev => prev - 1);
+      setCircuit(prev => prev.filter(gate => {
+        return !gate.qubits.includes(numQubits - 1);
+      }));
+    }
+  };
+
+  // ======= Simulation & Bloch Sphere logic =======
   const handleSimulate = async () => {
-    const gates = parseCodeToGates(code);
-    const allQubits = gates.flatMap((g) => g.qubits);
-    const filtered = allQubits.filter((q) => Number.isInteger(q) && q >= 0);
-    const numQubits = filtered.length ? Math.max(...filtered) + 1 : 1;
+    const gates = circuit.length > 0
+      ? circuit.map(({ name, qubits }) => ({ name, qubits }))
+      : parseCodeToGates(code);
+
     if (!gates.length) return alert("No valid gates found.");
 
+    const allQubits = gates.flatMap((g) => g.qubits);
+    const filteredQubits = allQubits.filter((q) => Number.isInteger(q) && q >= 0);
+    const simQubits = filteredQubits.length ? Math.max(...filteredQubits) + 1 : 1;
+
     const body = {
-      num_qubits: numQubits,
+      num_qubits: simQubits,
       gates,
-      num_simulations: 100,
+      num_simulations: 1000,
     };
 
     const endpoint = isNoisy ? "/simulate-noisy" : "/simulate";
-
     try {
       const res = await fetch(`http://localhost:8000${endpoint}`, {
         method: "POST",
@@ -144,7 +288,6 @@ export default function QuantumSimApp() {
             : body
         ),
       });
-
       if (!res.ok) throw new Error("API Error");
       const data = await res.json();
       setResults(data);
@@ -153,176 +296,133 @@ export default function QuantumSimApp() {
     }
   };
 
-  const renderCircuit = () => {
-    const gates = parseCodeToGates(code);
-    const allQubits = gates.flatMap((g) => g.qubits);
-    const filtered = allQubits.filter((q) => Number.isInteger(q) && q >= 0);
-    const numQubits = filtered.length ? Math.max(...filtered) + 1 : 1;
-
-    // Build timeline: alternate gate and line columns
-    const timeline = [];
-
-    gates.forEach((gate, i) => {
-      const gateCol = Array(numQubits).fill(null);
-      gate.qubits.forEach((q) => {
-        gateCol[q] = { type: "GATE", gate };
-      });
-      timeline.push(gateCol);
-
-      // Add connector column (line) after each gate column except the last
-      if (i < gates.length - 1) {
-        const lineCol = Array(numQubits).fill(null);
-        for (let q = 0; q < numQubits; q++) {
-          const current = gate.qubits.includes(q);
-          const nextGate = gates[i + 1]?.qubits.includes(q);
-          if (current && nextGate) {
-            lineCol[q] = { type: "LINE" };
-          }
-        }
-        timeline.push(lineCol);
-      }
-    });
-
-    return (
-      <div className={`circuit ${darkMode ? "dark" : ""}`}>
-        {Array.from({ length: numQubits }).map((_, qIdx) => (
-          <div className="circuit-row" key={`qrow-${qIdx}`}>
-            <span className="qubit-label">q[{qIdx}]</span>
-            <div className="circuit-track">
-              {timeline.map((col, colIdx) => {
-                const slot = col[qIdx];
-                const key = `c${colIdx}-q${qIdx}`;
-
-                if (!slot) return <div key={key} className="spacer" />;
-
-                if (slot.type === "LINE") {
-                  return <div key={key} className="line-segment" />;
-                }
-
-                if (slot.type === "GATE") {
-                  const gate = slot.gate;
-                  if (gate.name === "CNOT" && gate.qubits.length === 2) {
-                    const [control, target] = gate.qubits;
-                    if (qIdx === control) {
-                      return (
-                        <div className="gate cnot-control" key={key}>
-                          ●
-                          <div className="cnot-line" />
-                        </div>
-                      );
-                    } else if (qIdx === target) {
-                      return (
-                        <div className="gate cnot-target" key={key}>
-                          ⊕
-                          <div className="cnot-line" />
-                        </div>
-                      );
-                    } else if (
-                      qIdx > Math.min(control, target) &&
-                      qIdx < Math.max(control, target)
-                    ) {
-                      return <div key={key} className="cnot-bridge" />;
-                    } else {
-                      return <div key={key} className="spacer" />;
-                    }
-                  }
-
-                  return (
-                    <div key={key} className="gate">
-                      {gate.name}
-                    </div>
-                  );
-                }
-
-                return <div key={key} className="line-segment faded" />;
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  // Find number of qubits from code
+  // For Bloch visualization
   const gates = parseCodeToGates(code);
   const allQubits = gates.flatMap((g) => g.qubits);
   const filtered = allQubits.filter((q) => Number.isInteger(q) && q >= 0);
-  const numQubits = filtered.length ? Math.max(...filtered) + 1 : 1;
+  const numQubitsForBloch = filtered.length ? Math.max(...filtered) + 1 : 1;
 
-  // Compute Bloch angles for selected qubit
   const blochAngles = getBlochAnglesFromResults(results, selectedQubit);
-
-  // Compute Bloch angles for all qubits (only if results exist)
   const allBlochAngles = results
-    ? Array.from({ length: numQubits }, (_, i) =>
+    ? Array.from({ length: numQubitsForBloch }, (_, i) =>
         getBlochAnglesFromResults(results, i)
       )
     : [];
+  const allBasisVectors = results ? getAllBasisVectors(results, numQubitsForBloch) : [];
+  const qSphereVectors = results ? getQSphereVectors(results, numQubitsForBloch) : [];
 
-  const allBasisVectors = results ? getAllBasisVectors(results, numQubits) : [];
-
-  const qSphereVectors = results ? getQSphereVectors(results, numQubits) : [];
-
+  // ===== Render =====
   return (
     <div className={`container ${darkMode ? "dark" : ""}`}>
       <h1>Quantum Circuit Simulator</h1>
-
-      <div className="panel">
-        <h2>Quantum Circuit Code</h2>
-        <textarea
-          rows={6}
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-        />
-        <div className="buttons">
-          <button onClick={handleSimulate}>Simulate</button>
-          <button
-            onClick={() => setIsNoisy(!isNoisy)}
-            className={isNoisy ? "noisy" : ""}
-          >
-            {isNoisy ? "Noisy Mode: ON" : "Noisy Mode: OFF"}
-          </button>
-          <button onClick={() => setDarkMode(!darkMode)}>Toggle Dark Mode</button>
+      <div className="layout">
+        <div className="toolbox-container">
+          <GateToolbox onGateDragStart={handleDragStart} />
         </div>
-      </div>
-
-      <h2>Circuit Visualization</h2>
-      {renderCircuit()}
-
-      {results && (
-        <div className="panel">
-          <h3>Simulation Results</h3>
-          {Object.entries(results).map(([state, count]) => (
-            <div key={state}>
-              {state}: {count}
+        <div className="main-content">
+          <div className="panel">
+            <h2>Drag & Drop Circuit Editor</h2>
+            <CircuitBoard
+              circuit={circuit}
+              numQubits={numQubits}
+              onAddQubit={handleAddQubit}
+              onRemoveQubit={handleRemoveQubit}
+              onDragOver={handleDragOver}
+              onDrop={onDrop}
+              onCellClick={(params) => {
+                if (params.cancel) {
+                  setGatePrompt(null);
+                  return;
+                }
+                if (params.toggleRemove) {
+                  toggleRemoveMode();
+                  return;
+                }
+                handleCellClick(params);
+              }}
+              gatePrompt={gatePrompt}
+              removeModeActive={removeModeActive}
+              darkMode={darkMode}
+            />
+            <div className="buttons">
+              <button onClick={handleSimulate}>Simulate Circuit</button>
+              <button
+                onClick={() => setIsNoisy(!isNoisy)}
+                className={isNoisy ? "noisy" : ""}
+              >
+                {isNoisy ? "Noisy Mode: ON" : "Noisy Mode: OFF"}
+              </button>
+              <ThemeToggle />
+              <button onClick={() => setDarkMode(!darkMode)}>
+                Toggle Dark Mode
+              </button>
             </div>
-          ))}
-        </div>
-      )}
-
-      <div>
-        <h2>Bloch Sphere (All Qubits)</h2>
-        <BlochSphere basisVectors={qSphereVectors} />
-        {results && (
-          <div style={{ color: "#fff", marginTop: 8 }}>
-            {allBlochAngles.map((_, i) => (
-              <span key={i} style={{ marginRight: 16, color: "#fff" }}>
-                <span style={{
-                  display: "inline-block",
-                  width: 12,
-                  height: 12,
-                  background: [
-                    "#ffff00", "#ff00ff", "#00ffff", "#ff8800", "#00ff88", "#8888ff", "#fff"
-                  ][i % 7],
-                  borderRadius: "50%",
-                  marginRight: 4,
-                  verticalAlign: "middle"
-                }}></span>
-                Qubit {i}
-              </span>
-            ))}
           </div>
-        )}
+
+          <div className="panel">
+            <h2>Quantum Circuit Code</h2>
+            <textarea
+              rows={6}
+              value={code}
+              onChange={(e) => {
+                const newCode = e.target.value;
+                setIsManualEdit(true);
+                setCode(newCode);
+                if (newCode.trim()) {
+                  try {
+                    const parsedGates = parseCodeToGates(newCode);
+                    if (parsedGates.length > 0) {
+                      const processedGates = parsedGates.map((gate, index) => ({
+                        ...gate,
+                        column: index
+                      }));
+                      setCircuit(processedGates);
+                    }
+                  } catch (err) {
+                    // ignore parse errors
+                  }
+                }
+              }}
+            />
+            <small>You can also directly edit the code above</small>
+          </div>
+
+          {results && (
+            <div className="panel">
+              <h3>Simulation Results</h3>
+              {Object.entries(results).map(([state, count]) => (
+                <div key={state}>
+                  {state}: {count}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div>
+            <h2>Bloch Sphere (All Qubits)</h2>
+            <BlochSphere basisVectors={qSphereVectors} />
+            {results && (
+              <div style={{ color: "#fff", marginTop: 8 }}>
+                {allBlochAngles.map((_, i) => (
+                  <span key={i} style={{ marginRight: 16, color: "#fff" }}>
+                    <span style={{
+                      display: "inline-block",
+                      width: 12,
+                      height: 12,
+                      background: [
+                        "#ffff00", "#ff00ff", "#00ffff", "#ff8800", "#00ff88", "#8888ff", "#fff"
+                      ][i % 7],
+                      borderRadius: "50%",
+                      marginRight: 4,
+                      verticalAlign: "middle"
+                    }}></span>
+                    Qubit {i}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

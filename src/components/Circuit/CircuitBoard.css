@@ -1,0 +1,137 @@
+.circuit-board {
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: var(--panel);
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.qubit-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.add-qubit-btn {
+  background-color: #10b981; /* Green */
+  padding: 8px 16px;
+  border-radius: 6px;
+}
+
+.remove-qubit-btn {
+  background-color: #ef4444; /* Red */
+  padding: 8px 16px;
+  border-radius: 6px;
+}
+
+.circuit-grid {
+  display: flex;
+}
+
+.qubit-labels {
+  display: flex;
+  flex-direction: column;
+  margin-right: 12px;
+}
+
+.qubit-label {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-family: monospace;
+  font-weight: bold;
+}
+
+.circuit-cells {
+  flex: 1;
+  overflow-x: auto;
+  position: relative; /* Important for absolute positioned connections */
+}
+
+.circuit-row {
+  display: flex;
+  height: 60px;
+  margin-bottom: 1px;
+  position: relative;
+}
+
+.circuit-row::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--line);
+  z-index: 1;
+}
+
+.circuit-cell {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+.circuit-cell.empty {
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  margin: 0 4px;
+}
+
+.gate-cell {
+  width: 48px;
+  height: 48px;
+  background: var(--gate-bg);
+  color: white;
+  font-family: monospace;
+  font-size: 14px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+.cnot-control {
+  width: 48px;
+  height: 48px;
+  background-color: #1e40af;
+  border-radius: 50%;
+  font-size: 20px;
+  font-weight: bold;
+  position: relative;
+}
+
+.cnot-target {
+  width: 48px;
+  height: 48px;
+  background-color: #1e40af;
+  border-radius: 50%;
+  font-size: 20px;
+  position: relative;
+}
+
+.cnot-wire {
+  width: 2px;
+  height: 48px;
+  background-color: var(--line);
+  position: relative;
+  z-index: 1;
+}
+
+/* Add styles for SWAP gates */
+.swap-control, 
+.swap-target {
+  width: 48px;
+  height: 48px;
+  background-color: #4f46e5;
+  border-radius: 50%;
+  font-size: 20px;
+  position: relative;
+}
