@@ -3,6 +3,7 @@ import "./Circuit.css";
 import GateToolbox from "./components/GateToolbox/GateToolbox";
 import CircuitBoard from "./components/Circuit/CircuitBoard";
 import "./components/Circuit/CircuitBoard.css";
+import "./components/Circuit/CircuitBoardExtras.css";
 import "./components/GateToolbox/GateToolbox.css";
 import { useDragDrop } from "./hooks/useDragDrop";
 
@@ -15,6 +16,11 @@ export default function QuantumSimApp() {
   // Circuit state for drag and drop
   const [numQubits, setNumQubits] = useState(2);
   const [circuit, setCircuit] = useState([]);
+  
+  // State for gate selection prompts
+  const [gatePrompt, setGatePrompt] = useState(null);
+  // State to track if we're in "remove gate" mode
+  const [removeModeActive, setRemoveModeActive] = useState(false);
   const parseCodeToGates = (rawCode) => {
     const lines = rawCode.split("\n");
     const gates = [];
@@ -36,42 +42,81 @@ export default function QuantumSimApp() {
     });
     return generatedCode;
   };
-  
-  // Update code when circuit changes
+    // Update code when circuit changes
   useEffect(() => {
     if (circuit.length > 0) {
       setCode(generateCodeFromCircuit());
     }
   }, [circuit]);
   
-  // Handle drag and drop actions
+  // Update circuit when code changes
+  useEffect(() => {
+    // Don't process auto-generated code to avoid circular updates
+    if (code.includes("// Generated from circuit editor")) {
+      return;
+    }
+    
+    // Parse the code and convert it to circuit format
+    const parsedGates = parseCodeToGates(code);
+    
+    // Process gates and assign columns
+    const processedGates = [];
+    let currentColumn = 0;
+    const usedColumns = new Set();
+    
+    parsedGates.forEach(gate => {
+      // Find the next available column
+      while(usedColumns.has(currentColumn)) {
+        currentColumn++;
+      }
+      
+      // Add gate with column information
+      processedGates.push({
+        ...gate,
+        column: currentColumn
+      });
+      
+      // Mark column as used
+      usedColumns.add(currentColumn);
+      currentColumn++;
+    });
+    
+    // Update circuit if it's different
+    if (JSON.stringify(processedGates) !== JSON.stringify(circuit)) {
+      setCircuit(processedGates);
+    }
+  }, [code]);
+    // Handle drag and drop actions
   const handleDrop = (gate, position) => {
     const { qubit, column } = position;
     
-    // Create a new gate with position information
-    let newGate;
-    
-    if (gate.name === 'CNOT' && qubit + 1 < numQubits) {
-      // For CNOT, we need two qubits (control and target)
-      newGate = {
-        ...gate,
-        qubits: [qubit, qubit + 1],
-        column
-      };
-    } else {
-      // For single qubit gates
-      newGate = {
-        ...gate,
-        qubits: [qubit],
-        column
-      };
+    // If this is a multi-qubit gate that requires selection of control/target qubits
+    if ((gate.controlQubits && gate.targetQubits) || gate.name === 'CNOT' || gate.name === 'SWAP') {
+      // Save the current gate and position for later processing
+      setGatePrompt({
+        gate,
+        position,
+        step: 'select-control'
+      });
+      return;
     }
     
-    // Add the gate to the circuit
+    // For single qubit gates
+    const newGate = {
+      ...gate,
+      qubits: [qubit],
+      column
+    };
+    
+    addGateToCircuit(newGate);
+  };
+  
+  // Function to add gate to circuit
+  const addGateToCircuit = (newGate) => {
     setCircuit(prev => {
       // Check if there's already a gate at this position
       const existingGateIndex = prev.findIndex(g => 
-        g.column === column && g.qubits.includes(qubit)
+        g.column === newGate.column && g.qubits.some(q => newGate.qubits.includes(q))
       );
       
       if (existingGateIndex !== -1) {
@@ -84,6 +129,63 @@ export default function QuantumSimApp() {
         return [...prev, newGate];
       }
     });
+  };
+  
+  // Handle cell click - for selecting control/target qubits or removing gates
+  const handleCellClick = (position) => {
+    const { qubit, column } = position;
+    
+    // If we're in gate prompt mode (selecting control/target qubits)
+    if (gatePrompt) {
+      if (gatePrompt.step === 'select-control') {
+        // Update prompt to select target qubit
+        setGatePrompt({
+          ...gatePrompt,
+          controlQubit: qubit,
+          step: 'select-target'
+        });
+      } else if (gatePrompt.step === 'select-target') {
+        // Don't allow selecting the same qubit for control and target
+        if (qubit === gatePrompt.controlQubit) {
+          alert("Control and target qubits must be different");
+          return;
+        }
+        
+        // Create the new multi-qubit gate
+        const newGate = {
+          ...gatePrompt.gate,
+          qubits: [gatePrompt.controlQubit, qubit],
+          column: gatePrompt.position.column
+        };
+        
+        // Add the new gate
+        addGateToCircuit(newGate);
+        
+        // Clear the prompt
+        setGatePrompt(null);
+      }
+    }
+    // If we're in remove mode, remove the gate at this position
+    else if (removeModeActive) {
+      removeGateAtPosition(position);
+    }
+  };
+  
+  // Function to remove gate at a position
+  const removeGateAtPosition = (position) => {
+    const { qubit, column } = position;
+    
+    setCircuit(prev => {
+      return prev.filter(gate => {
+        // Remove gates that have the same column and include this qubit
+        return !(gate.column === column && gate.qubits.includes(qubit));
+      });
+    });
+  };
+  
+  // Toggle remove gate mode
+  const toggleRemoveMode = () => {
+    setRemoveModeActive(prev => !prev);
   };
   
   // Drag and drop hook
@@ -241,14 +343,28 @@ export default function QuantumSimApp() {
         
         <div className="main-content">
           <div className="panel">
-            <h2>Drag & Drop Circuit Editor</h2>
-            <CircuitBoard 
+            <h2>Drag & Drop Circuit Editor</h2>            <CircuitBoard 
               circuit={circuit}
               numQubits={numQubits}
               onAddQubit={handleAddQubit}
               onRemoveQubit={handleRemoveQubit}
               onDragOver={handleDragOver}
               onDrop={onDrop}
+              onCellClick={(params) => {
+                if (params.cancel) {
+                  setGatePrompt(null);
+                  return;
+                }
+                
+                if (params.toggleRemove) {
+                  toggleRemoveMode();
+                  return;
+                }
+                
+                handleCellClick(params);
+              }}
+              gatePrompt={gatePrompt}
+              removeModeActive={removeModeActive}
               darkMode={darkMode}
             />
             <div className="buttons">
