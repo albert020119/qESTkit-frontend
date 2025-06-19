@@ -6,7 +6,6 @@ import * as THREE from "three";
 // Imports from both branches, deduped and ordered
 import ThemeToggle from "./ThemeToggle";
 import { useTheme } from "./theme/ThemeContext";
-import BlochSphere from "./BlochSphere";
 import GateToolbox from "./components/GateToolbox/GateToolbox";
 import CircuitBoard from "./components/Circuit/CircuitBoard";
 import "./components/Circuit/CircuitBoard.css";
@@ -366,11 +365,7 @@ export default function QuantumSimApp() {
   const qSphereVectors = results ? getQSphereVectors(results, numQubitsForBloch) : [];
   
   const blochAngles = getBlochAnglesFromResults(results, selectedQubit);
-  const allBlochAngles = results
-    ? Array.from({ length: numQubitsForBloch }, (_, i) =>
-        getBlochAnglesFromResults(results, i)
-      )
-    : [];
+  // Removed allBlochAngles since we no longer need it
   const allBasisVectors = results ? getAllBasisVectors(results, numQubitsForBloch) : [];
 
   // Reports functions
@@ -509,9 +504,7 @@ export default function QuantumSimApp() {
                 }}
               />
               <small>You can also directly edit the code above</small>
-            </div>
-
-            {results && (
+            </div>            {results && (
               <div className="panel">
                 <h3>Simulation Results</h3>
                 {Object.entries(results).map(([state, count]) => (
@@ -521,31 +514,6 @@ export default function QuantumSimApp() {
                 ))}
               </div>
             )}
-
-            <div>
-              <h2>Bloch Sphere (All Qubits)</h2>
-              <BlochSphere basisVectors={qSphereVectors} />
-              {results && (
-                <div style={{ color: "#fff", marginTop: 8 }}>
-                  {allBlochAngles.map((_, i) => (
-                    <span key={i} style={{ marginRight: 16, color: "#fff" }}>
-                      <span style={{
-                        display: "inline-block",
-                        width: 12,
-                        height: 12,
-                        background: [
-                          "#ffff00", "#ff00ff", "#00ffff", "#ff8800", "#00ff88", "#8888ff", "#fff"
-                        ][i % 7],
-                        borderRadius: "50%",
-                        marginRight: 4,
-                        verticalAlign: "middle"
-                      }}></span>
-                      Qubit {i}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
 
             {/* Chatbot added at the end of the main content */}
             <Chatbot circuitText={code} />
