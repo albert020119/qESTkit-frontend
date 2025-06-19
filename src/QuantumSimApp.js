@@ -143,7 +143,6 @@ export default function QuantumSimApp() {
             </div>
           </div>
         ))}
-        <Chatbot />
       </div>
     );
   };
@@ -184,6 +183,7 @@ export default function QuantumSimApp() {
           ))}
         </div>
       )}
+      <Chatbot circuitText={code} />
     </div>
   );
 }

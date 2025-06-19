@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import "../Circuit.css";
 
-export default function Chatbot() {
+export default function Chatbot({ circuitText }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
     { from: "bot", text: "Hello! How can I help you with quantum circuits?" },
@@ -14,6 +14,13 @@ export default function Chatbot() {
       inputRef.current.focus();
     }
   }, [open]);
+
+  const handleAttachCode = () => {
+    if (circuitText) {
+      setInput(input + (input && !input.endsWith(" ") ? " " : "") + circuitText);
+      if (inputRef.current) inputRef.current.focus();
+    }
+  };
 
   const sendMessage = () => {
     if (!input.trim()) return;
@@ -54,19 +61,34 @@ export default function Chatbot() {
           <div className="chatbot-messages">
             {messages.map((msg, idx) => (
               <div key={idx} className={`msg ${msg.from}`}>
-                {msg.text}
+                {msg.text.split("\n").map((line, lineIdx) => (
+                  <div key={lineIdx}>{line}</div>
+                ))}
               </div>
             ))}
           </div>
           <div className="chatbot-input">
-            <input
+            <textarea
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
               placeholder="Type your message..."
+              rows={1}
+              className="chatbot-textarea"
             />
-            <button onClick={sendMessage}>Send</button>
+            <button
+              className="attach-code-btn"
+              onClick={handleAttachCode}
+              title="Attach code"
+              style={{marginLeft: 6}}
+            >
+              <span className="plus-sign">+</span>
+            </button>
+            <button
+              className="send-btn"
+              onClick={sendMessage}
+              style={{marginLeft: 8}}
+            >Send</button>
           </div>
         </div>
       )}
