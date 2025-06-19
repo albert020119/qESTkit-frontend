@@ -476,4 +476,5 @@ const handleSimulate = async () => {
       </div>
     </div>
   </div>
-);
+  );
+}
