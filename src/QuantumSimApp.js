@@ -12,6 +12,7 @@ import "./components/Circuit/CircuitBoardExtras.css";
 import "./components/GateToolbox/GateToolbox.css";
 import { useDragDrop } from "./hooks/useDragDrop";
 import Chatbot from "./chatbot/Chatbot";
+import { ReportsMenu, CreateReportModal, ViewReportsModal, createReport, getReports } from "./reports";
 
 // ========= Helper functions =========
 function getBlochAnglesFromResults(results, qubitIdx = 0) {
@@ -85,12 +86,16 @@ function getQSphereVectors(results, numQubits) {
 export default function QuantumSimApp() {
   // Theme context
   const { darkMode } = useTheme();
-
   // State
   const [code, setCode] = useState("H 0\nCNOT 0 1\n");
   const [results, setResults] = useState(null);
   const [isNoisy, setIsNoisy] = useState(false);
   const [selectedQubit, setSelectedQubit] = useState(0);
+
+  // Reports state
+  const [showCreateReport, setShowCreateReport] = useState(false);
+  const [showViewReports, setShowViewReports] = useState(false);
+  const [reports, setReports] = useState([]);
 
   // DnD/circuit state:
   const [numQubits, setNumQubits] = useState(2);
@@ -317,27 +322,67 @@ export default function QuantumSimApp() {
     : [];
   const allBasisVectors = results ? getAllBasisVectors(results, numQubitsForBloch) : [];
   const qSphereVectors = results ? getQSphereVectors(results, numQubitsForBloch) : [];
+  // Reports functions
+  const handleCreateReport = async (code, message) => {
+    try {
+      await createReport(code, message);
+      alert("Report created successfully!");
+    } catch (error) {
+      alert("Error creating report: " + error.message);
+      throw error; // Re-throw so the modal can handle loading state
+    }
+  };
+
+  const handleViewReports = async () => {
+    try {
+      const data = await getReports();
+      setReports(data);
+      setShowViewReports(true);
+    } catch (error) {
+      alert("Error fetching reports: " + error.message);
+    }
+  };
 
   // ===== Render =====
   return (
-    <div className={`container ${darkMode ? "dark" : ""}`}>
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
-  <a
-    href="/documentation.html"
-    target="_blank"
-    rel="noopener noreferrer"
-    style={{
-      backgroundColor: "#3b82f6",
-      color: "white",
-      padding: "8px 16px",
-      borderRadius: "6px",
-      textDecoration: "none",
-      fontWeight: "bold"
-    }}
-  >
-    Documentation
-  </a>
-</div>
+    <div className={`container ${darkMode ? "dark" : ""}`}>      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px", gap: "12px" }}>
+        {/* Reports Menu */}
+        <ReportsMenu 
+          onCreateReport={() => setShowCreateReport(true)}
+          onViewReports={handleViewReports}
+        />
+
+        <a
+          href="/documentation.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            backgroundColor: "#3b82f6",
+            color: "white",
+            padding: "8px 16px",
+            borderRadius: "6px",
+            textDecoration: "none",
+            fontWeight: "bold"
+          }}
+        >
+          Documentation
+        </a>
+      </div>
+
+      {/* Create Report Modal */}
+      <CreateReportModal 
+        isOpen={showCreateReport}
+        onClose={() => setShowCreateReport(false)}
+        circuitCode={code}
+        onSubmit={handleCreateReport}
+      />
+
+      {/* View Reports Modal */}
+      <ViewReportsModal 
+        isOpen={showViewReports}
+        onClose={() => setShowViewReports(false)}
+        reports={reports}
+      />
 
       <h1>Quantum Circuit Simulator</h1>
       <div className="layout">
