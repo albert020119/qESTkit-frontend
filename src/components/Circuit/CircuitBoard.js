@@ -13,6 +13,7 @@ const CircuitBoard = ({
   gatePrompt,
   removeModeActive,
   onExportQasm,
+  onOpenLibrary,
   darkMode 
 }) => {
   // State for tracking which cell is being dragged over
@@ -185,6 +186,12 @@ const CircuitBoard = ({
           onClick={() => onCellClick({ toggleRemove: true })}
         >
           {removeModeActive ? 'Cancel Remove' : 'Remove Gate'}
+        </button>
+        <button 
+          className="library-btn"
+          onClick={onOpenLibrary}
+        >
+          Circuit Library
         </button>
         <button 
           className="export-qasm-btn"

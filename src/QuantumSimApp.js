@@ -15,6 +15,16 @@ import "./components/GateToolbox/GateToolbox.css";
 import { useDragDrop } from "./hooks/useDragDrop";
 import Chatbot from "./chatbot/Chatbot";
 import { ReportsMenu, CreateReportModal, ViewReportsModal, createReport, getReports } from "./reports";
+import QuantumTeleportation from "./circuits/QuantumTeleportation";
+import TeleportationBranch00 from "./circuits/TeleportationBranch00";
+import TeleportationBranch01 from "./circuits/TeleportationBranch01";
+import TeleportationBranch10 from "./circuits/TeleportationBranch10";
+import TeleportationBranch11 from "./circuits/TeleportationBranch11";
+import BellState from "./circuits/BellState";
+import Deutsch from "./circuits/Deutsch";
+import DeutschConstant from "./circuits/DeutschConstant";
+import SuperdenseCoding from "./circuits/SuperdenseCoding";
+import { GroverSearch } from "./circuits";
 
 // ========= Helper functions =========
 function getBlochAnglesFromResults(results, qubitIdx = 0) {
@@ -89,19 +99,33 @@ function VantaBackground() {
   const vantaEffect = useRef(null);
 
   useEffect(() => {
-    vantaEffect.current = NET({
-      el: vantaRef.current,
-      THREE,
-      mouseControls: true,
-      touchControls: true,
-      minHeight: 200.00,
-      minWidth: 200.00,
-      scale: 1.0,
-      scaleMobile: 1.0,
-      color: 0x1e293b,
-      backgroundColor: 0x270485
-    });
+    const initializeVanta = () => {
+      if (!vantaEffect.current) {
+        vantaEffect.current = NET({
+          el: vantaRef.current,
+          THREE,
+          mouseControls: true,
+          touchControls: true,
+          minHeight: 200.0,
+          minWidth: 200.0,
+          scale: 1.0,
+          scaleMobile: 1.0,
+          color: 0x1e293b,
+          backgroundColor: 0x270485,
+        });
+      }
+    };
+
+    initializeVanta();
+
+    const interval = setInterval(() => {
+      if (!vantaEffect.current) {
+        initializeVanta();
+      }
+    }, 5000); // Check every 5 seconds
+
     return () => {
+      clearInterval(interval);
       if (vantaEffect.current) {
         vantaEffect.current.destroy();
         vantaEffect.current = null;
@@ -110,7 +134,17 @@ function VantaBackground() {
   }, []);
 
   return (
-    <div style={{ position: "fixed", width: "100vw", height: "100vh", top: 0, left: 0, zIndex: -1, pointerEvents: "none" }}>
+    <div
+      style={{
+        position: "fixed",
+        width: "100vw",
+        height: "100vh",
+        top: 0,
+        left: 0,
+        zIndex: -1,
+        pointerEvents: "none",
+      }}
+    >
       <div ref={vantaRef} style={{ width: "100%", height: "100%" }} />
       {/* Overlay for opacity */}
       <div
@@ -121,8 +155,8 @@ function VantaBackground() {
           top: 0,
           left: 0,
           background: "#1e293b", // or transparent
-          opacity: 0.96,       // adjust this value for more/less opacity
-          pointerEvents: "none"
+          opacity: 0.96, // adjust this value for more/less opacity
+          pointerEvents: "none",
         }}
       />
     </div>
@@ -147,6 +181,7 @@ export default function QuantumSimApp() {
   
   // QASM Export state
   const [showQasmExport, setShowQasmExport] = useState(false);
+  const [showCircuitLibrary, setShowCircuitLibrary] = useState(false);
 
   // DnD/circuit state:
   const [numQubits, setNumQubits] = useState(2);
@@ -253,17 +288,21 @@ export default function QuantumSimApp() {
   };
 
   const addGateToCircuit = (newGate) => {
-    setCircuit(prev => {
-      const existingGateIndex = prev.findIndex(g =>
-        g.column === newGate.column && g.qubits.some(q => newGate.qubits.includes(q))
+    setCircuit((prev) => {
+      const existingGateIndex = prev.findIndex(
+        (g) =>
+          g.column === newGate.column &&
+          g.qubits.some((q) => newGate.qubits.includes(q))
       );
+      let newCircuit;
       if (existingGateIndex !== -1) {
-        const newCircuit = [...prev];
+        newCircuit = [...prev];
         newCircuit[existingGateIndex] = newGate;
-        return newCircuit;
       } else {
-        return [...prev, newGate];
+        newCircuit = [...prev, newGate];
       }
+      setCode(generateCodeFromCircuit(newCircuit)); // Update the code state
+      return newCircuit;
     });
   };
 
@@ -296,8 +335,12 @@ export default function QuantumSimApp() {
 
   const removeGateAtPosition = (position) => {
     const { qubit, column } = position;
-    setCircuit(prev => {
-      return prev.filter(gate => !(gate.column === column && gate.qubits.includes(qubit)));
+    setCircuit((prev) => {
+      const newCircuit = prev.filter(
+        (gate) => !(gate.column === column && gate.qubits.includes(qubit))
+      );
+      setCode(generateCodeFromCircuit(newCircuit)); // Update the code state
+      return newCircuit;
     });
   };
 
@@ -307,6 +350,20 @@ export default function QuantumSimApp() {
   
   const handleExportToQasm = () => {
     setShowQasmExport(true);
+  };
+
+  const handleLoadLibraryCircuit = (circuitCode) => {
+    if (!circuitCode) return;
+    setIsManualEdit(true);
+    setCode(circuitCode);
+    const parsed = parseCodeToGates(circuitCode);
+    const processed = parsed.map((g, i) => ({ ...g, column: i }));
+    setCircuit(processed);
+    // adjust numQubits based on parsed gates
+    const allQ = parsed.flatMap(g => g.qubits);
+    const maxQ = allQ.length ? Math.max(...allQ) + 1 : 1;
+    setNumQubits(Math.max(numQubits, maxQ));
+    setShowCircuitLibrary(false);
   };
 
   const { handleDragStart, handleDragOver, handleDrop: onDrop } = useDragDrop((gate, position) => {
@@ -453,6 +510,75 @@ export default function QuantumSimApp() {
           numQubits={numQubits}
         />
 
+        {/* Circuit Library dropdown */}
+        {showCircuitLibrary && (
+          <div style={{ position: 'absolute', right: 24, top: 88, zIndex: 60 }}>
+            <div style={{
+              width: 280,
+              maxHeight: 350,
+              overflowY: 'auto',
+              background: darkMode ? '#0b1220' : '#ffffff',
+              color: darkMode ? '#e6eef8' : '#0b1220',
+              border: '1px solid rgba(0,0,0,0.12)',
+              borderRadius: 8,
+              boxShadow: '0 6px 18px rgba(0,0,0,0.12)',
+              padding: 0
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 12px 8px 12px', borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+                <strong style={{ fontSize: '0.95em' }}>Circuit Library</strong>
+                <button onClick={() => setShowCircuitLibrary(false)} style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', fontSize: '1.2em' }}>×</button>
+              </div>
+              
+              <div style={{ padding: '8px 0' }}>
+
+                <div style={{ padding: '8px 12px', fontWeight: 600, fontSize: '0.9em', color: darkMode ? '#94a3b8' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Deutsch's Algorithm
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  <button style={{ textAlign: 'left', padding: '10px 24px', borderRadius: 0, background: 'transparent', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: '0.95em' }} onMouseEnter={(e) => e.target.style.background = darkMode ? '#1e293b' : '#f1f5f9'} onMouseLeave={(e) => e.target.style.background = 'transparent'} onClick={() => handleLoadLibraryCircuit(Deutsch.code)}>
+                    Balanced Oracle
+                  </button>
+                  <button style={{ textAlign: 'left', padding: '10px 24px', borderRadius: 0, background: 'transparent', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: '0.95em' }} onMouseEnter={(e) => e.target.style.background = darkMode ? '#1e293b' : '#f1f5f9'} onMouseLeave={(e) => e.target.style.background = 'transparent'} onClick={() => handleLoadLibraryCircuit(DeutschConstant.code)}>
+                  Constant Oracle
+                  </button>
+                </div>
+
+                <div style={{ padding: '8px 12px', fontWeight: 600, fontSize: '0.9em', color: darkMode ? '#94a3b8' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Superdense Coding
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  <button style={{ textAlign: 'left', padding: '10px 24px', borderRadius: 0, background: 'transparent', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: '0.95em' }} onMouseEnter={(e) => e.target.style.background = darkMode ? '#1e293b' : '#f1f5f9'} onMouseLeave={(e) => e.target.style.background = 'transparent'} onClick={() => handleLoadLibraryCircuit(SuperdenseCoding.code)}>
+                    Superdense Coding
+                  </button>
+                </div>
+
+                <div style={{ padding: '8px 12px', fontWeight: 600, fontSize: '0.9em', color: darkMode ? '#94a3b8' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Grover's Search
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  <button style={{ textAlign: 'left', padding: '10px 24px', borderRadius: 0, background: 'transparent', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: '0.95em' }} onMouseEnter={(e) => e.target.style.background = darkMode ? '#1e293b' : '#f1f5f9'} onMouseLeave={(e) => e.target.style.background = 'transparent'} onClick={() => handleLoadLibraryCircuit(GroverSearch.code)}>
+                    Grover's Search (Find 11)
+                  </button>
+                </div>
+
+                <div style={{ padding: '8px 12px', fontWeight: 600, fontSize: '0.9em', color: darkMode ? '#94a3b8' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  3-Qubit Entanglement
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  <button
+                    style={{ textAlign: 'left', padding: '10px 24px', borderRadius: 0, background: 'transparent', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: '0.95em' }}
+                    onMouseEnter={(e) => e.target.style.background = darkMode ? '#1e293b' : '#f1f5f9'}
+                    onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                    onClick={() => handleLoadLibraryCircuit(BellState.code)}
+                  >
+                    3-Qubit Entanglement
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <h1>Quantum Circuit Simulator</h1>
         <div className="layout">
           <div className="toolbox-container">
@@ -486,6 +612,7 @@ export default function QuantumSimApp() {
                 gatePrompt={gatePrompt}
                 removeModeActive={removeModeActive}
                 darkMode={darkMode}
+                onOpenLibrary={() => setShowCircuitLibrary(true)}
               />
               <div className="buttons">
                 <button onClick={handleSimulate}>Simulate Circuit</button>
@@ -525,7 +652,9 @@ export default function QuantumSimApp() {
                 }}
               />
               <small>You can also directly edit the code above</small>
-            </div>            {results && (
+
+            </div>
+            {results && (
               <div className="panel">
                 <h3>Simulation Results</h3>
                 {Object.entries(results).map(([state, count]) => (
@@ -533,6 +662,27 @@ export default function QuantumSimApp() {
                     {state}: {count}
                   </div>
                 ))}
+                {/* Bell state entanglement message */}
+                {(() => {
+                  // Check if the loaded circuit is the Bell state
+                  const bellStateCode = `H 0\nCNOT 0 1\nCNOT 0 2\n`;
+                  if (code === bellStateCode) {
+                    // Find the most frequent result
+                    const entries = Object.entries(results);
+                    if (entries.length > 0) {
+                      const [maxState, maxCount] = entries.reduce((a, b) => (a[1] > b[1] ? a : b));
+                      // For 3 qubits: 000, for 2 qubits: 00
+                      if (maxState === "000" || maxState === "00") {
+                        return (
+                          <div style={{ marginTop: 12, color: '#22c55e', fontWeight: 600 }}>
+                            Alice and Bob both measured 0 (state {maxState}): entanglement confirmed!
+                          </div>
+                        );
+                      }
+                    }
+                  }
+                  return null;
+                })()}
               </div>
             )}
 
