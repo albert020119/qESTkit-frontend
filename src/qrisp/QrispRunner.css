@@ -1,0 +1,370 @@
+/* ===== Qrisp Runner Panel ===== */
+
+.qrisp-runner {
+  margin-top: 0;
+}
+
+.qrisp-header {
+  margin-bottom: 16px;
+}
+
+.qrisp-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.qrisp-title-row h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qrisp-icon {
+  font-size: 1.4em;
+}
+
+.qrisp-badge {
+  background: linear-gradient(135deg, #306998, #ffd43b);
+  color: #fff;
+  font-size: 0.7em;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.qrisp-subtitle {
+  margin: 8px 0 0;
+  font-size: 0.88em;
+  opacity: 0.75;
+  line-height: 1.5;
+}
+
+.qrisp-subtitle code {
+  background: rgba(59, 130, 246, 0.15);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.92em;
+  font-family: 'Fira Code', 'Consolas', monospace;
+}
+
+/* ===== Examples ===== */
+
+.qrisp-examples-section {
+  margin-bottom: 12px;
+}
+
+.qrisp-examples-toggle {
+  background: transparent;
+  border: 1px solid var(--textarea-border);
+  color: inherit;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.qrisp-examples-toggle:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: #3b82f6;
+}
+
+.qrisp-examples-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 6px;
+  border: 1px solid var(--textarea-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.qrisp-example-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--textarea-border);
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+  font-size: 0.9em;
+}
+
+.qrisp-example-item:last-child {
+  border-bottom: none;
+}
+
+.qrisp-example-item:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.qrisp-example-label {
+  font-weight: 700;
+  color: #3b82f6;
+  margin-bottom: 2px;
+}
+
+.qrisp-example-desc {
+  font-size: 0.85em;
+  opacity: 0.65;
+}
+
+/* ===== Code Editor ===== */
+
+.qrisp-editor-wrapper {
+  border: 1px solid var(--textarea-border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.qrisp-editor-header {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--textarea-border);
+  display: flex;
+  align-items: center;
+}
+
+.dark .qrisp-editor-header {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.qrisp-file-tab {
+  font-size: 0.82em;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.7;
+}
+
+.qrisp-file-icon {
+  font-size: 1.1em;
+}
+
+.qrisp-code-editor {
+  width: 100%;
+  min-height: 180px;
+  padding: 14px 16px;
+  font-family: 'Fira Code', 'Consolas', 'Courier New', monospace;
+  font-size: 0.9em;
+  line-height: 1.6;
+  background: var(--textarea-bg);
+  color: var(--textarea-fg);
+  border: none;
+  resize: vertical;
+  outline: none;
+  tab-size: 4;
+  box-sizing: border-box;
+}
+
+.qrisp-code-editor::placeholder {
+  opacity: 0.35;
+}
+
+.qrisp-code-editor:focus {
+  box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+/* ===== Controls ===== */
+
+.qrisp-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.qrisp-shots-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+.qrisp-shots-input {
+  width: 90px;
+  padding: 7px 10px;
+  border: 1px solid var(--textarea-border);
+  border-radius: 6px;
+  background: var(--textarea-bg);
+  color: var(--textarea-fg);
+  font-family: monospace;
+  font-size: 0.95em;
+  outline: none;
+}
+
+.qrisp-shots-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.qrisp-run-btn {
+  padding: 9px 22px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.95em;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.qrisp-run-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+}
+
+.qrisp-run-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.qrisp-run-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.qrisp-run-btn.loading {
+  background: linear-gradient(135deg, #475569, #334155);
+}
+
+/* Spinner */
+.qrisp-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: qrisp-spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes qrisp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== Error ===== */
+
+.qrisp-error {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  color: #ef4444;
+  font-size: 0.9em;
+  align-items: flex-start;
+}
+
+.qrisp-error-icon {
+  font-size: 1.3em;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.qrisp-error strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.qrisp-error p {
+  margin: 0;
+  word-break: break-word;
+  opacity: 0.85;
+}
+
+/* ===== Results ===== */
+
+.qrisp-results {
+  margin-top: 4px;
+}
+
+.qrisp-results h3 {
+  margin: 0 0 10px;
+  font-size: 1.05em;
+}
+
+.qrisp-results-summary {
+  display: flex;
+  gap: 20px;
+  font-size: 0.85em;
+  margin-bottom: 14px;
+  opacity: 0.7;
+}
+
+.qrisp-probability-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.qrisp-prob-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 55px 55px;
+  align-items: center;
+  gap: 10px;
+}
+
+.qrisp-state-label {
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-weight: 600;
+  font-size: 0.92em;
+  text-align: right;
+}
+
+.qrisp-bar-container {
+  height: 22px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.dark .qrisp-bar-container {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.qrisp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #6366f1);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+  min-width: 2px;
+}
+
+.qrisp-prob-value {
+  font-family: monospace;
+  font-size: 0.88em;
+  font-weight: 600;
+  text-align: right;
+}
+
+.qrisp-count-value {
+  font-family: monospace;
+  font-size: 0.82em;
+  opacity: 0.55;
+  text-align: right;
+}

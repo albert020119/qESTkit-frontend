@@ -15,6 +15,7 @@ import "./components/GateToolbox/GateToolbox.css";
 import { useDragDrop } from "./hooks/useDragDrop";
 import Chatbot from "./chatbot/Chatbot";
 import { ReportsMenu, CreateReportModal, ViewReportsModal, createReport, getReports } from "./reports";
+import QrispRunner from "./qrisp/QrispRunner";
 import QuantumTeleportation from "./circuits/QuantumTeleportation";
 import TeleportationBranch00 from "./circuits/TeleportationBranch00";
 import TeleportationBranch01 from "./circuits/TeleportationBranch01";
@@ -711,6 +712,9 @@ export default function QuantumSimApp() {
                 })()}
               </div>
             )}
+
+            {/* Qrisp Integration Panel */}
+            <QrispRunner darkMode={darkMode} />
 
             {/* Chatbot added at the end of the main content */}
             <Chatbot circuitText={code} />
