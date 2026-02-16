@@ -16,6 +16,8 @@ import { useDragDrop } from "./hooks/useDragDrop";
 import Chatbot from "./chatbot/Chatbot";
 import { ReportsMenu, CreateReportModal, ViewReportsModal, createReport, getReports } from "./reports";
 import QrispRunner from "./qrisp/QrispRunner";
+import { NoiseHeatmap } from "./components/NoiseHeatmap";
+import "./components/NoiseHeatmap/NoiseHeatmap.css";
 import QuantumTeleportation from "./circuits/QuantumTeleportation";
 import TeleportationBranch00 from "./circuits/TeleportationBranch00";
 import TeleportationBranch01 from "./circuits/TeleportationBranch01";
@@ -175,6 +177,8 @@ export default function QuantumSimApp() {
   const [isNoisy, setIsNoisy] = useState(false);
   const [selectedQubit, setSelectedQubit] = useState(0);
   const [noiseProfile, setNoiseProfile] = useState('custom');
+  const [gateError, setGateError] = useState(0.05);
+  const [measError, setMeasError] = useState(0.10);
 
   // Reports state
   const [showCreateReport, setShowCreateReport] = useState(false);
@@ -494,10 +498,22 @@ export default function QuantumSimApp() {
   };
 
   // ======= Simulation & Bloch Sphere logic =======
+  // Normalise gate names for backend compatibility
+  const normalizeGateName = (name) => {
+    const map = {
+      'H': 'H', 'X': 'X', 'Y': 'Y', 'Z': 'Z', 'S': 'S', 'T': 'T',
+      'CNOT': 'CNOT', 'CZ': 'CZ', 'SWAP': 'SWAP',
+      'I': 'I', 'IDENTITY': 'Identity', 'Identity': 'Identity',
+      'RX': 'Rx', 'Rx': 'Rx', 'RY': 'Ry', 'Ry': 'Ry', 'RZ': 'Rz', 'Rz': 'Rz',
+      'PH': 'Ph', 'Ph': 'Ph', 'PHASE': 'Ph',
+    };
+    return map[name] || name;
+  };
+
   const handleSimulate = async () => {
     const gates = circuit.length > 0
       ? circuit.map(({ name, qubits, param }) => ({ 
-          name, 
+          name: normalizeGateName(name), 
           qubits, 
           ...(param !== undefined ? { param } : {})
         }))
@@ -514,8 +530,8 @@ export default function QuantumSimApp() {
       gates,
       num_simulations: 1000,
       ...(isNoisy && noiseProfile === 'custom' && {
-        gate_error_prob: 0.05,
-        measurement_error_prob: 0.1
+        gate_error_prob: gateError,
+        measurement_error_prob: measError
       }),
       ...(isNoisy && noiseProfile === 'ibm_kyiv' && {
         gate_error_prob: 0.008,
@@ -743,7 +759,11 @@ export default function QuantumSimApp() {
                 {isNoisy && (
                   <select
                     value={noiseProfile}
-                    onChange={(e) => setNoiseProfile(e.target.value)}
+                    onChange={(e) => {
+                      setNoiseProfile(e.target.value);
+                      if (e.target.value === 'ibm_kyiv') { setGateError(0.008); setMeasError(0.01); }
+                      else if (e.target.value === 'ibm_brisbane') { setGateError(0.012); setMeasError(0.02); }
+                    }}
                     style={{
                       marginLeft: "12px",
                       padding: "8px",
@@ -759,6 +779,54 @@ export default function QuantumSimApp() {
                   </select>
                 )}
               </div>
+
+              {/* Noise error sliders */}
+              {isNoisy && (
+                <div className="noise-sliders-panel" style={{ marginTop: 16, boxShadow: 'none', padding: '14px 16px' }}>
+                  <h3><span>🎛️</span> Noise Parameters</h3>
+                  <p className="noise-sliders-subtitle">Adjust gate and measurement error probabilities for the noise model.</p>
+                  <div className="noise-sliders-grid">
+                    <div className="noise-slider-group">
+                      <div className="noise-slider-label">
+                        <span>Gate Error</span>
+                        <span className="noise-slider-value">{(gateError * 100).toFixed(1)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        className="noise-slider-input"
+                        min="0"
+                        max="0.3"
+                        step="0.001"
+                        value={gateError}
+                        onChange={(e) => { setGateError(parseFloat(e.target.value)); setNoiseProfile('custom'); }}
+                      />
+                      <span className="noise-slider-hint">Probability of a random error after each gate</span>
+                    </div>
+                    <div className="noise-slider-group">
+                      <div className="noise-slider-label">
+                        <span>Measurement Error</span>
+                        <span className="noise-slider-value">{(measError * 100).toFixed(1)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        className="noise-slider-input"
+                        min="0"
+                        max="0.3"
+                        step="0.001"
+                        value={measError}
+                        onChange={(e) => { setMeasError(parseFloat(e.target.value)); setNoiseProfile('custom'); }}
+                      />
+                      <span className="noise-slider-hint">Probability of a bit-flip on readout</span>
+                    </div>
+                  </div>
+                  <div className="noise-presets-row">
+                    <button className={`noise-preset-btn ${noiseProfile === 'custom' && gateError === 0.05 && measError === 0.10 ? 'active' : ''}`} onClick={() => { setGateError(0.05); setMeasError(0.10); setNoiseProfile('custom'); }}>Default</button>
+                    <button className={`noise-preset-btn ${noiseProfile === 'ibm_kyiv' ? 'active' : ''}`} onClick={() => { setGateError(0.008); setMeasError(0.01); setNoiseProfile('ibm_kyiv'); }}>IBM Kyiv</button>
+                    <button className={`noise-preset-btn ${noiseProfile === 'ibm_brisbane' ? 'active' : ''}`} onClick={() => { setGateError(0.012); setMeasError(0.02); setNoiseProfile('ibm_brisbane'); }}>IBM Brisbane</button>
+                    <button className={`noise-preset-btn ${gateError === 0.15 && measError === 0.20 ? 'active' : ''}`} onClick={() => { setGateError(0.15); setMeasError(0.20); setNoiseProfile('custom'); }}>Heavy</button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="panel">
@@ -820,6 +888,17 @@ export default function QuantumSimApp() {
                 })()}
               </div>
             )}
+
+            {/* Noise Channel Comparison Heatmap */}
+            <NoiseHeatmap
+              circuit={circuit}
+              numQubits={numQubits}
+              parseCodeToGates={parseCodeToGates}
+              code={code}
+              gateError={gateError}
+              measError={measError}
+              darkMode={darkMode}
+            />
 
             {/* Qrisp Integration Panel */}
             <QrispRunner

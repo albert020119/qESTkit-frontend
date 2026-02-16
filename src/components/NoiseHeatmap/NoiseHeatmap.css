@@ -1,0 +1,232 @@
+.noise-heatmap-panel {
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.noise-heatmap-header h3 {
+  margin: 0 0 4px 0;
+  font-size: 1.15em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.noise-heatmap-icon {
+  font-size: 1.3em;
+}
+
+.noise-heatmap-subtitle {
+  margin: 0 0 14px 0;
+  font-size: 0.85em;
+  color: var(--line);
+}
+
+/* Controls row */
+.noise-heatmap-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.noise-heatmap-run-btn {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #fff;
+  border: none;
+  padding: 9px 22px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.92em;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.noise-heatmap-run-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.45);
+}
+
+.noise-heatmap-run-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.noise-heatmap-run-btn.loading {
+  background: linear-gradient(135deg, #818cf8, #6366f1);
+}
+
+.noise-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: noise-spin 0.7s linear infinite;
+}
+
+@keyframes noise-spin {
+  to { transform: rotate(360deg); }
+}
+
+.noise-heatmap-info {
+  font-size: 0.82em;
+  color: var(--line);
+  font-family: "Roboto Mono", monospace;
+}
+
+/* Error */
+.noise-heatmap-error {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.88em;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Canvas wrapper */
+.noise-heatmap-canvas-wrap {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  padding: 8px;
+}
+
+.noise-heatmap-canvas-wrap canvas {
+  display: block;
+}
+
+/* ===== Noise Sliders Section ===== */
+.noise-sliders-panel {
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.noise-sliders-panel h3 {
+  margin: 0 0 4px 0;
+  font-size: 1.1em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.noise-sliders-subtitle {
+  margin: 0 0 14px 0;
+  font-size: 0.83em;
+  color: var(--line);
+}
+
+.noise-sliders-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 28px;
+}
+
+.noise-slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.noise-slider-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.88em;
+  font-weight: 600;
+}
+
+.noise-slider-value {
+  font-family: "Roboto Mono", monospace;
+  font-weight: 700;
+  color: #6366f1;
+  font-size: 0.95em;
+}
+
+.noise-slider-input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #22c55e 0%, #eab308 50%, #ef4444 100%);
+  outline: none;
+  cursor: pointer;
+}
+
+.noise-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid #6366f1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  cursor: grab;
+  transition: transform 0.12s;
+}
+
+.noise-slider-input::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.noise-slider-input::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid #6366f1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  cursor: grab;
+}
+
+.noise-slider-hint {
+  font-size: 0.75em;
+  color: var(--line);
+}
+
+/* Profile presets row */
+.noise-presets-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.noise-preset-btn {
+  padding: 5px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: transparent;
+  color: var(--fg);
+  font-size: 0.82em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.noise-preset-btn:hover {
+  border-color: #6366f1;
+  color: #6366f1;
+}
+
+.noise-preset-btn.active {
+  background: #6366f1;
+  color: #fff;
+  border-color: #6366f1;
+}
