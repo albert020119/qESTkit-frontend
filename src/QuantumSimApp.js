@@ -192,6 +192,114 @@ export default function QuantumSimApp() {
   const [removeModeActive, setRemoveModeActive] = useState(false);
   const [isManualEdit, setIsManualEdit] = useState(false);
 
+  // ======= Qrisp code parser =======
+  const parseQrispToGates = (qrispCode) => {
+    if (!qrispCode || typeof qrispCode !== 'string') return [];
+
+    const gates = [];
+
+    // Gate name mapping: qrisp function name → circuit gate name
+    const GATE_MAP = {
+      'h': 'H', 'x': 'X', 'y': 'Y', 'z': 'Z',
+      's': 'S', 't': 'T',
+      'cx': 'CNOT', 'cz': 'CZ',
+      'rx': 'RX', 'ry': 'RY', 'rz': 'RZ',
+      'p': 'PH', 'ph': 'PH',
+      'id': 'I', 'swap': 'SWAP',
+    };
+    const PARAM_GATES = new Set(['rx', 'ry', 'rz', 'p', 'ph']);
+    const TWO_QUBIT_GATES = new Set(['cx', 'cz', 'swap']);
+
+    // Expand simple for-loops: "for i in range(n):" followed by indented body
+    const expandLoops = (code) => {
+      const lines = code.split('\n');
+      const expanded = [];
+      let i = 0;
+      while (i < lines.length) {
+        const forMatch = lines[i].match(/^\s*for\s+(\w+)\s+in\s+range\((\d+)\)\s*:/);
+        if (forMatch) {
+          const varName = forMatch[1];
+          const count = parseInt(forMatch[2]);
+          // Collect indented body lines
+          const body = [];
+          i++;
+          while (i < lines.length && (lines[i].match(/^\s{2,}/) || lines[i].match(/^\t/))) {
+            body.push(lines[i]);
+            i++;
+          }
+          // Expand the loop
+          for (let val = 0; val < count; val++) {
+            for (const bodyLine of body) {
+              // Replace loop variable references like qv[i] with qv[val]
+              const replaced = bodyLine.replace(
+                new RegExp(`\\[\\s*${varName}\\s*\\]`, 'g'),
+                `[${val}]`
+              );
+              expanded.push(replaced.trim());
+            }
+          }
+        } else {
+          expanded.push(lines[i]);
+          i++;
+        }
+      }
+      return expanded.join('\n');
+    };
+
+    const expandedCode = expandLoops(qrispCode);
+    const lines = expandedCode.split('\n');
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('import') ||
+          trimmed.startsWith('from') || trimmed.startsWith('result')) continue;
+
+      // Match: qrisp.gate(param, qv[i], qv[j]) or qrisp.gate(qv[i], qv[j]) or qrisp.gate(qv[i])
+      const gateMatch = trimmed.match(/qrisp\.(\w+)\((.+)\)/);
+      if (!gateMatch) continue;
+
+      const funcName = gateMatch[1].toLowerCase();
+      const argsStr = gateMatch[2];
+
+      // Skip QuantumVariable declarations
+      if (funcName === 'quantumvariable') continue;
+
+      const gateName = GATE_MAP[funcName];
+      if (!gateName) continue;
+
+      // Extract qubit indices from qv[n] patterns
+      const qubitMatches = [...argsStr.matchAll(/\w+\[(\d+)\]/g)];
+      const qubits = qubitMatches.map(m => parseInt(m[1]));
+
+      if (qubits.length === 0) continue;
+
+      if (PARAM_GATES.has(funcName)) {
+        // Extract parameter (first argument before qv[...])
+        const paramMatch = argsStr.match(/^\s*([\d.eE+\-*/()piPI]+)/);
+        let paramValue = 0;
+        if (paramMatch) {
+          try {
+            // Handle pi references
+            const paramStr = paramMatch[1]
+              .replace(/\bpi\b/gi, String(Math.PI))
+              .replace(/\bnp\.pi\b/gi, String(Math.PI))
+              .replace(/\bmath\.pi\b/gi, String(Math.PI));
+            paramValue = Function('"use strict"; return (' + paramStr + ')')();
+          } catch { paramValue = 0; }
+        }
+        gates.push({ name: gateName, qubits, param: paramValue, hasParam: true });
+      } else if (TWO_QUBIT_GATES.has(funcName)) {
+        if (qubits.length >= 2) {
+          gates.push({ name: gateName, qubits: qubits.slice(0, 2) });
+        }
+      } else {
+        gates.push({ name: gateName, qubits: [qubits[0]] });
+      }
+    }
+
+    return gates;
+  };
+
   // ======= Parsing and circuit helpers =======
   const parseCodeToGates = (rawCode) => {
     if (!rawCode || typeof rawCode !== 'string') return [];
@@ -714,7 +822,39 @@ export default function QuantumSimApp() {
             )}
 
             {/* Qrisp Integration Panel */}
-            <QrispRunner darkMode={darkMode} />
+            <QrispRunner
+              darkMode={darkMode}
+              onQrispCodeChange={(qrispCode) => {
+                const parsedGates = parseQrispToGates(qrispCode);
+                if (parsedGates.length > 0) {
+                  const processedGates = parsedGates.map((gate, index) => ({
+                    ...gate,
+                    column: index,
+                  }));
+                  setCircuit(processedGates);
+                  // Update the text code from parsed gates
+                  let generatedCode = '';
+                  processedGates.forEach((gate) => {
+                    if (gate.hasParam && gate.param !== undefined) {
+                      generatedCode += `${gate.name} ${gate.param} ${gate.qubits.join(' ')}\n`;
+                    } else {
+                      generatedCode += `${gate.name} ${gate.qubits.join(' ')}\n`;
+                    }
+                  });
+                  setIsManualEdit(true);
+                  setCode(generatedCode);
+                  // Update numQubits based on parsed gates
+                  const allQ = parsedGates.flatMap((g) => g.qubits);
+                  const maxQ = allQ.length ? Math.max(...allQ) + 1 : 1;
+                  setNumQubits((prev) => Math.max(prev, maxQ));
+                } else {
+                  // Clear circuit if no gates parsed
+                  setCircuit([]);
+                  setIsManualEdit(true);
+                  setCode('');
+                }
+              }}
+            />
 
             {/* Chatbot added at the end of the main content */}
             <Chatbot circuitText={code} />

@@ -48,13 +48,19 @@ result = qv`,
   },
 ];
 
-export default function QrispRunner({ darkMode }) {
+export default function QrispRunner({ darkMode, onQrispCodeChange }) {
   const [code, setCode] = useState(EXAMPLE_SNIPPETS[0].code);
   const [shots, setShots] = useState(1000);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showExamples, setShowExamples] = useState(false);
+
+  // Notify parent of initial code on mount
+  React.useEffect(() => {
+    if (onQrispCodeChange) onQrispCodeChange(code);
+    // eslint-disable-next-line
+  }, []);
 
   const handleRun = async () => {
     if (!code.trim()) return;
@@ -83,8 +89,14 @@ export default function QrispRunner({ darkMode }) {
     }
   };
 
+  const handleCodeChange = (newCode) => {
+    setCode(newCode);
+    if (onQrispCodeChange) onQrispCodeChange(newCode);
+  };
+
   const loadExample = (snippet) => {
     setCode(snippet.code);
+    if (onQrispCodeChange) onQrispCodeChange(snippet.code);
     setResults(null);
     setError(null);
     setShowExamples(false);
@@ -152,7 +164,7 @@ export default function QrispRunner({ darkMode }) {
         <textarea
           className="qrisp-code-editor"
           value={code}
-          onChange={(e) => setCode(e.target.value)}
+          onChange={(e) => handleCodeChange(e.target.value)}
           rows={10}
           spellCheck={false}
           placeholder="# Write your Qrisp code here...&#10;import qrisp&#10;&#10;qv = qrisp.QuantumVariable(2)&#10;qrisp.h(qv[0])&#10;result = qv"
