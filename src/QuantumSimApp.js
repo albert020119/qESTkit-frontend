@@ -173,6 +173,7 @@ export default function QuantumSimApp() {
   const [results, setResults] = useState(null);
   const [isNoisy, setIsNoisy] = useState(false);
   const [selectedQubit, setSelectedQubit] = useState(0);
+  const [noiseProfile, setNoiseProfile] = useState('custom');
 
   // Reports state
   const [showCreateReport, setShowCreateReport] = useState(false);
@@ -403,6 +404,18 @@ export default function QuantumSimApp() {
       num_qubits: simQubits,
       gates,
       num_simulations: 1000,
+      ...(isNoisy && noiseProfile === 'custom' && {
+        gate_error_prob: 0.05,
+        measurement_error_prob: 0.1
+      }),
+      ...(isNoisy && noiseProfile === 'ibm_kyiv' && {
+        gate_error_prob: 0.008,
+        measurement_error_prob: 0.01
+      }),
+      ...(isNoisy && noiseProfile === 'ibm_brisbane' && {
+        gate_error_prob: 0.012,
+        measurement_error_prob: 0.02
+      })
     };
 
     const endpoint = isNoisy ? "/simulate-noisy" : "/simulate";
@@ -410,11 +423,7 @@ export default function QuantumSimApp() {
       const res = await fetch(`http://localhost:8000${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          isNoisy
-            ? { ...body, gate_error_prob: 0.05, measurement_error_prob: 0.1 }
-            : body
-        ),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error("API Error");
       const data = await res.json();
@@ -620,9 +629,26 @@ export default function QuantumSimApp() {
                   onClick={() => setIsNoisy(!isNoisy)}
                   className={isNoisy ? "noisy" : ""}
                 >
-                  {isNoisy ? "Noisy Mode: ON" : "Noisy Mode: OFF"}
+                  {isNoisy ? `Noisy Mode: ON (${noiseProfile === 'custom' ? 'Custom' : noiseProfile})` : "Noisy Mode: OFF"}
                 </button>
-                <ThemeToggle />
+                {isNoisy && (
+                  <select
+                    value={noiseProfile}
+                    onChange={(e) => setNoiseProfile(e.target.value)}
+                    style={{
+                      marginLeft: "12px",
+                      padding: "8px",
+                      borderRadius: "6px",
+                      border: "1px solid #ccc",
+                      backgroundColor: darkMode ? "#1e293b" : "#fff",
+                      color: darkMode ? "#e6eef8" : "#000",
+                    }}
+                  >
+                    <option value="custom">Custom Lab Model</option>
+                    <option value="ibm_kyiv">IBM Kyiv</option>
+                    <option value="ibm_brisbane">IBM Brisbane</option>
+                  </select>
+                )}
               </div>
             </div>
 
